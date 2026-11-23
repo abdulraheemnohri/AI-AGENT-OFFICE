@@ -3,6 +3,7 @@ import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import PptxGenJS from "pptxgenjs";
 import { PDFDocument, degrees } from "pdf-lib";
+import JSZip from "jszip";
 
 export async function importDocx(bytes: ArrayBuffer): Promise<string> {
   const result = await mammoth.extractRawText({ arrayBuffer: bytes });
@@ -122,4 +123,55 @@ export async function stampPdfPage(bytes: Uint8Array, pageNumber: number, text: 
   const page = doc.getPage(pageNumber - 1);
   page.drawText(text, { x: 48, y: 36, size: 11, opacity: 0.8 });
   return doc.save();
+}
+
+function decodeXml(value: string): string {
+  return value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+}
+
+export async function importPptx(bytes: ArrayBuffer): Promise<{ title: string; body: string }[]> {
+  const zip = await JSZip.loadAsync(bytes);
+  const paths = Object.keys(zip.files).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+    .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1] || 0) - Number(b.match(/slide(\d+)/)?.[1] || 0));
+  if (!paths.length) throw new Error("The PowerPoint file contains no readable slides");
+  const slides: { title: string; body: string }[] = [];
+  for (const path of paths) {
+    const xml = await zip.file(path)!.async("text");
+    const paragraphs = [...xml.matchAll(/<a:p(?:\s[^>]*)?>([\s\S]*?)<\/a:p>/g)].map((match) =>
+      [...match[1].matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)].map((part) => decodeXml(part[1])).join("")
+    ).map((line) => line.trim()).filter(Boolean);
+    const useful = paragraphs.filter((line) => line !== "Created with AI Agent Office");
+    slides.push({ title: useful[0] || "Untitled slide", body: useful.slice(1).join("\n") });
+  }
+  return slides;
+}
+
+export async function reorderPdfPages(bytes: Uint8Array, pageOrder: number[]): Promise<Uint8Array> {
+  const source = await PDFDocument.load(bytes);
+  const count = source.getPageCount();
+  if (pageOrder.length !== count || new Set(pageOrder).size !== count ||
+      pageOrder.some((n) => !Number.isInteger(n) || n < 1 || n > count)) {
+    throw new Error("Enter every page exactly once, for example 3,1,2");
+  }
+  const output = await PDFDocument.create();
+  const copied = await output.copyPages(source, pageOrder.map((n) => n - 1));
+  copied.forEach((page) => output.addPage(page));
+  return output.save();
+}
+
+export async function duplicatePdfPage(bytes: Uint8Array, pageNumber: number): Promise<Uint8Array> {
+  const source = await PDFDocument.load(bytes);
+  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > source.getPageCount()) throw new Error("Invalid PDF page number");
+  const [copy] = await source.copyPages(source, [pageNumber - 1]);
+  source.insertPage(pageNumber, copy);
+  return source.save();
+}
+
+export async function insertBlankPdfPage(bytes: Uint8Array, afterPage: number): Promise<Uint8Array> {
+  const source = await PDFDocument.load(bytes);
+  if (!Number.isInteger(afterPage) || afterPage < 0 || afterPage > source.getPageCount()) throw new Error("Invalid insertion position");
+  const reference = source.getPage(Math.max(0, Math.min(afterPage - 1, source.getPageCount() - 1)));
+  const size = reference.getSize();
+  source.insertPage(afterPage, [size.width, size.height]);
+  return source.save();
 }
