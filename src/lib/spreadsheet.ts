@@ -110,3 +110,35 @@ export function evaluateWorkbook(workbook: Workbook): CellValue[][] {
   };
   return workbook.map((row,r)=>row.map((_,c)=>readCell(r,c)));
 }
+
+export type SortDirection = "ascending" | "descending";
+
+/** Returns a sorted copy; the optional header row stays at index zero. */
+export function sortWorkbookRows(workbook: Workbook, column: number, direction: SortDirection = "ascending", hasHeader = false): Workbook {
+  if (!Number.isInteger(column) || column < 0) throw new Error("Column index must be a non-negative integer");
+  const header = hasHeader && workbook.length ? [workbook[0]] : [];
+  const start = header.length;
+  const sign = direction === "ascending" ? 1 : -1;
+  const sorted = workbook.slice(start).map((row, index) => ({ row, index })).sort((a, b) => {
+    const left = (a.row[column] ?? "").trim();
+    const right = (b.row[column] ?? "").trim();
+    if (!left && !right) return a.index - b.index;
+    if (!left) return 1;
+    if (!right) return -1;
+    const ln = Number(left), rn = Number(right);
+    const bothNumeric = Number.isFinite(ln) && Number.isFinite(rn);
+    const comparison = bothNumeric ? ln - rn : left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
+    return comparison === 0 ? a.index - b.index : comparison * sign;
+  }).map(item => item.row);
+  return [...header, ...sorted];
+}
+
+/** Returns original row indexes matching a case-insensitive search across raw and calculated cells. */
+export function filterWorkbookRowIndexes(workbook: Workbook, query: string, calculated?: Workbook): number[] {
+  const needle = query.trim().toLocaleLowerCase();
+  if (!needle) return workbook.map((_, index) => index);
+  return workbook.flatMap((row, index) => {
+    const values = [...row, ...(calculated?.[index] ?? []).map(String)];
+    return values.some(value => String(value ?? "").toLocaleLowerCase().includes(needle)) ? [index] : [];
+  });
+}
