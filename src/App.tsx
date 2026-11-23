@@ -23,7 +23,7 @@ export default function App() {
   const [slides,setSlides]=useState(()=>readStored("aao.slides",[{title:"Welcome",body:"Introduce your topic and key message."}])); const [activeSlide,setActiveSlide]=useState(0);
   const [task,setTask]=useState(""); const [tasks,setTasks]=useState<{id:number;title:string;done:boolean}[]>(()=>readStored("aao.tasks",[]));
   const [notice,setNotice]=useState("Ready"); const [busy,setBusy]=useState(false);
-  useEffect(()=>{localStorage.setItem("aao.prefs",JSON.stringify(prefs));document.documentElement.dataset.theme=prefs.theme;},[prefs]);
+  useEffect(()=>{localStorage.setItem("aao.prefs",JSON.stringify(prefs));const media=window.matchMedia("(prefers-color-scheme: light)");const apply=()=>{document.documentElement.dataset.theme=prefs.theme==="system"?(media.matches?"light":"dark"):prefs.theme;};apply();media.addEventListener("change",apply);return()=>media.removeEventListener("change",apply);},[prefs]);
   useEffect(()=>{localStorage.setItem("aao.grid",JSON.stringify(grid));},[grid]);
   useEffect(()=>{localStorage.setItem("aao.sheetName",JSON.stringify(sheetName));},[sheetName]);
   useEffect(()=>{localStorage.setItem("aao.slides",JSON.stringify(slides));},[slides]);
