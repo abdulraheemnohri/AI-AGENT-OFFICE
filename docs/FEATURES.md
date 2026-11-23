@@ -26,7 +26,7 @@
 - PDF OCR, signatures, interactive form fields, freehand/highlight annotations, redaction and full layout editing are not implemented.
 
 ## AI and device integration
-- Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU selection, runtime check, local prompt/response and persisted local chat history.
+- Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU/NPU backend selection (NPU is hardware/runtime dependent), configurable thinking mode, thinking-token budget, output-token limit, runtime check, local prompt/response and persisted local chat history.
 - LiteRT-LM Python package and model weights are not embedded in the default application installer. Use the offline preparation scripts to assemble an offline payload.
 - AI Agent page is a local task checklist and deterministic safe-plan template; it does not execute commands or operate on the PC.
 - Printer action opens the Windows/WebView print dialog and uses the configured page size, orientation and margins.
