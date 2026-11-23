@@ -8,7 +8,7 @@ This document distinguishes working foundation features from planned integration
 - UTF-8 text/Markdown Writer with edit/preview, word and character counts, find/replace-all, native open/save dialogs, and optional local recovery snapshot.
 - CSV grid editor with quoted-field parsing and escaping, import, cell editing, row extension, and CSV export.
 - Presentation outline editor with slide add/delete/edit and Markdown outline export.
-- Local task checklist and deterministic safe-plan template. It does not invoke an LLM, run commands, or modify external files.
+- Local task checklist and deterministic safe-plan template. It does not invoke an LLM, run commands, or modify external files.\n- Local persistence for spreadsheet contents, slide outlines and task lists in the desktop WebView profile.
 - Local preferences for theme, editor font size, autosave recovery, offline preference, telemetry preference and default format.
 - Runtime compatibility catalog with clear "planned" status.
 
