@@ -20,6 +20,12 @@ describe("Office format engines", () => {
     });
   });
 
+  it("exports a basic RTF document", () => {
+    const blob = exportRtf("# Report\\nA paragraph.");
+    expect(blob.type).toBe("application/rtf");
+    return blob.text().then((text) => expect(text).toContain("Report"));
+  });
+
   it("exports a presentation as a PPTX Blob", async () => {
     const blob = await exportPptx([{ title: "Welcome", body: "Offline presentation" }]);
     expect(blob.size).toBeGreaterThan(100);
