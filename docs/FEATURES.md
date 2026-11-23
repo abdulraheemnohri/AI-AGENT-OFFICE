@@ -35,7 +35,7 @@
 
 ## Data portability and offline deployment
 - PC open/save/import/export actions for supported formats.
-- Versioned JSON workspace backup/restore includes document, workbook, slides, tasks, preferences, model configuration/history and recovery data.
+- Versioned JSON workspace backup/restore includes document, workbook, slides, tasks, preferences, model configuration/history and recovery data. Manual backups can include the currently open PDF up to 12 MB; larger PDFs are explicitly omitted with a warning. Autosave snapshots omit PDF bytes to avoid filling the WebView local-storage quota. Files inside the separately selected agent folder are not copied into workspace backups.
 - Autosave recovery now snapshots the full workspace, not only the Writer document.
 - Backup restore validates schema and data sections before applying; 20 MB import limit.
 - Windows scripts prepare local Python wheels, optional Python/WebView2/model installers and application installer packaging. The output still requires clean-machine offline verification.
