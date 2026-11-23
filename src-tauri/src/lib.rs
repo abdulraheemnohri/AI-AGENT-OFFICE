@@ -77,13 +77,12 @@ fn run_litert_python(code: &str, args: &[String]) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn litert_status() -> Result<String, String> {
-    let code = "import litert_lm; print('LiteRT-LM Python API is ready')";
-    run_litert_python(code, &[])
+async fn litert_status() -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(|| run_litert_python("import litert_lm; print('LiteRT-LM Python API is ready')", &[])).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-fn litert_generate(model_path: String, prompt: String, backend: String) -> Result<String, String> {
+async fn litert_generate(model_path: String, prompt: String, backend: String) -> Result<String, String> {
     if prompt.trim().is_empty() || prompt.len() > 30000 { return Err("Prompt must contain 1 to 30,000 bytes".into()); }
     if !matches!(backend.as_str(), "CPU" | "GPU") { return Err("Backend must be CPU or GPU".into()); }
     let model = PathBuf::from(&model_path);
@@ -101,7 +100,7 @@ with litert_lm.Engine(model_path, backend=backend) as engine:
         result = conversation.send_message(prompt)
         print(result["content"][0]["text"])
 "#;
-    run_litert_python(code, &[model_path, prompt, backend])
+    tauri::async_runtime::spawn_blocking(move || run_litert_python(code, &[model_path, prompt, backend])).await.map_err(|e| e.to_string())?
 }
 
 pub fn run(){tauri::Builder::default().plugin(tauri_plugin_dialog::init()).invoke_handler(tauri::generate_handler![open_document,save_document,list_removable_drives,save_to_usb,pick_litert_model,litert_status,litert_generate]).run(tauri::generate_context!()).expect("AI Agent Office startup failed");}
