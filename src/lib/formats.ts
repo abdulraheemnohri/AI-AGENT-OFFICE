@@ -125,27 +125,6 @@ export async function stampPdfPage(bytes: Uint8Array, pageNumber: number, text: 
   return doc.save();
 }
 
-function decodeXml(value: string): string {
-  return value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
-}
-
-export async function importPptx(bytes: ArrayBuffer): Promise<{ title: string; body: string }[]> {
-  const zip = await JSZip.loadAsync(bytes);
-  const paths = Object.keys(zip.files).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-    .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1] || 0) - Number(b.match(/slide(\d+)/)?.[1] || 0));
-  if (!paths.length) throw new Error("The PowerPoint file contains no readable slides");
-  const slides: { title: string; body: string }[] = [];
-  for (const path of paths) {
-    const xml = await zip.file(path)!.async("text");
-    const paragraphs = [...xml.matchAll(/<a:p(?:\s[^>]*)?>([\s\S]*?)<\/a:p>/g)].map((match) =>
-      [...match[1].matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)].map((part) => decodeXml(part[1])).join("")
-    ).map((line) => line.trim()).filter(Boolean);
-    const useful = paragraphs.filter((line) => line !== "Created with AI Agent Office");
-    slides.push({ title: useful[0] || "Untitled slide", body: useful.slice(1).join("\n") });
-  }
-  return slides;
-}
-
 export async function reorderPdfPages(bytes: Uint8Array, pageOrder: number[]): Promise<Uint8Array> {
   const source = await PDFDocument.load(bytes);
   const count = source.getPageCount();
@@ -174,23 +153,6 @@ export async function insertBlankPdfPage(bytes: Uint8Array, afterPage: number): 
   const size = reference.getSize();
   source.insertPage(afterPage, [size.width, size.height]);
   return source.save();
-}
-
-export async function importPptx(bytes: ArrayBuffer): Promise<{ title: string; body: string }[]> {
-  const zip = await (await import("jszip")).default.loadAsync(bytes);
-  const names = Object.keys(zip.files).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-    .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1] || 0) - Number(b.match(/slide(\d+)/)?.[1] || 0));
-  if (!names.length) throw new Error("No presentation slides were found");
-  const slides: { title: string; body: string }[] = [];
-  for (const name of names) {
-    const file = zip.file(name);
-    if (!file) continue;
-    const xml = await file.async("string");
-    const parsed = new DOMParser().parseFromString(xml, "application/xml");
-    const text = Array.from(parsed.getElementsByTagName("a:t")).map((node) => node.textContent || "").filter(Boolean);
-    slides.push({ title: text.shift() || "Slide " + (slides.length + 1), body: text.join("\n") });
-  }
-  return slides;
 }
 
 export function exportRtf(markdown: string): Blob {
