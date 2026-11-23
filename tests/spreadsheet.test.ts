@@ -14,6 +14,13 @@ describe("spreadsheet formula engine", () => {
     const out=evaluateWorkbook([["1"],["2"],["3"],["=SUM(A1:A3)","=AVERAGE(A1:A3)","=MIN(A1:A3)","=MAX(A1:A3)","=COUNT(A1:A3)"]]);
     expect(out[3]).toEqual([6,2,1,3,3]);
   });
+  it("supports additional numeric and statistical functions", () => {
+    const out=evaluateWorkbook([["-8","2","3","=ABS(A1)","=SQRT(B1)","=POWER(B1,C1)","=MOD(-7,3)","=PRODUCT(B1:C1)","=MEDIAN(A1:C1)","=ROUND(1.256,2)","=ROUNDUP(1.231,2)","=ROUNDDOWN(-1.239,2)"]]);
+    expect(out[0].slice(3)).toEqual([8,Math.sqrt(2),8,2,6,-8,1.26,1.24,-1.23]);
+  });
+  it("returns formula errors for invalid numeric function arguments", () => {
+    expect(evaluateWorkbook([["=SQRT(-1)","=ROUND(1,11)","=MOD(1,0)","=ABS(1,2)"]])[0]).toEqual(["#ERROR!","#ERROR!","#DIV/0!","#ERROR!"]);
+  });
   it("detects circular references and division by zero", () => {
     const out=evaluateWorkbook([["=B1","=A1","=1/0"]]);
     expect(out[0]).toEqual(["#CYCLE!","#CYCLE!","#DIV/0!"]);
