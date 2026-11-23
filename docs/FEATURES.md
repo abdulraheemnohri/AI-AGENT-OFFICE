@@ -26,7 +26,7 @@
 - PDF OCR, signatures, interactive form fields, freehand/highlight annotations, redaction and full layout editing are not implemented.
 
 ## AI and device integration
-- Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU/NPU backend selection (NPU is hardware/runtime dependent), configurable thinking mode, thinking-token budget, output-token limit, runtime check, local prompt/response and persisted local chat history.
+- Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU/NPU backend selection (NPU is hardware/runtime dependent), configurable thinking mode, thinking-token budget, output-token limit, optional speculative decoding/MTP, runtime check, local prompt/response and persisted local chat history.
 - LiteRT-LM Python package and model weights are not embedded in the default application installer. Use the offline preparation scripts to assemble an offline payload.
 - AI Agent page supports a deterministic safe checklist and optional LiteRT-LM-generated task proposals. Proposed steps are added as checklist items; they are not executed automatically.
 - Scoped local file tools allow the user to choose one folder, list top-level files, read UTF-8 text, create/edit/save and delete individual files. File writes and deletes require confirmation; path traversal and symlink escapes are rejected. Access can be revoked from the page.
