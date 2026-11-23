@@ -16,3 +16,84 @@
 :root[data-density="compact"] nav button{padding:8px 10px}:root[data-density="compact"] section{padding-top:24px;padding-bottom:24px}:root[data-density="compact"] .card{min-height:100px;padding:13px}:root[data-density="compact"] .stats>div,:root[data-density="compact"] .feature,:root[data-density="compact"] .runtime{padding:11px}:root[data-density="compact"] .settings-group{padding:12px;margin:10px 0}
 
 .agent-files{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:240px;overflow:auto;margin:10px 0}.agent-files button{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;padding:9px 10px;border:1px solid #2a3c56;border-radius:7px;background:#101d30;color:#dce5f2;font-size:11px}.agent-files button.selected-file{border-color:#8197f5;background:#263b5d}.agent-files small{color:#91a3bc;white-space:nowrap}.workspace-editor{width:100%;min-height:220px;max-height:55vh;resize:vertical;background:#0c1828;color:#e7edf7;border:1px solid #344a67;border-radius:8px;padding:12px;font:13px/1.6 Consolas,monospace}
+
+/* Adaptive application shell: wide desktop, compact laptop/tablet, and phone. */
+html,body,#root{width:100%;min-height:100%;margin:0}
+body{min-width:320px;overflow-x:hidden}
+.shell{width:100%;min-width:0}
+main,section,aside{min-width:0}
+section{width:min(1120px,100%);padding:clamp(16px,3.2vw,38px)}
+header{padding-inline:clamp(12px,3vw,32px);gap:12px}
+.status{min-width:0}
+.cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.feature-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.runtime-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.toolbar,.module-head,.head-right{min-width:0}
+.toolbar input,.toolbar select{max-width:100%}
+.sheet-wrap,.pdf-toolbar,.model-chat-history,.agent-files{max-width:100%}
+button,.file-action,.print-trigger{min-height:36px}
+img,video,iframe{max-width:100%}
+@media(max-width:1050px){
+  .shell{min-height:100dvh}
+  aside{width:210px;padding:18px 12px}
+  section{padding:24px}
+  header{height:auto;min-height:58px;flex-wrap:wrap;padding-block:10px}
+  .hero{padding:26px}
+  .hero h1{font-size:clamp(24px,4vw,34px)}
+  .device-row{flex-wrap:wrap}
+  .device-row div{min-width:180px}
+}
+@media(max-width:760px){
+  .shell{display:flex;flex-direction:column}
+  aside{width:100%;height:auto;flex:0 0 auto;padding:12px 14px;border-right:0;border-bottom:1px solid #26364d}
+  .brand{margin:0 0 10px}
+  .offline,.privacy{display:none}
+  nav{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;margin:0;padding:2px 0 6px;scrollbar-width:thin}
+  nav button{width:auto;min-width:max-content;white-space:nowrap;padding:10px 12px}
+  main{width:100%}
+  header{align-items:flex-start}
+  .head-right{gap:8px;flex-wrap:wrap}
+  section{padding:18px 14px}
+  .hero{gap:12px;padding:20px;align-items:flex-start}
+  .hero>svg{width:54px;height:54px;margin:10px 0;flex:0 0 auto}
+  .hero p{max-width:none}
+  .module-head{align-items:flex-start;flex-direction:column}
+  .slides-layout{grid-template-columns:minmax(0,1fr)}
+  .slide-list{display:flex;gap:6px;overflow-x:auto}
+  .slide-list button{min-width:max-content;width:auto}
+  .slide-editor textarea{height:220px}
+  .findbar{margin-left:0;flex-wrap:wrap}
+  .findbar input{width:min(42vw,180px)}
+  .writer{min-height:300px;height:55vh;padding:16px}
+  .preview{padding:18px}
+  .sheet-wrap{max-height:58vh}
+  .sheet-grid td input{min-width:84px}
+  .settings-group{max-width:none;padding:12px}
+  .setting{align-items:flex-start;flex-wrap:wrap}
+  .setting small{width:100%;margin-left:0}
+  .pdf-frame{height:58vh;min-height:320px}
+  .task-entry{flex-wrap:wrap}
+  .task-entry input{min-width:0;width:100%;flex-basis:100%}
+  footer{height:auto;min-height:30px}
+}
+@media(max-width:480px){
+  header{font-size:10px}
+  .status{max-width:52vw}
+  .hero{display:block}
+  .hero>svg{display:none}
+  .hero h1{font-size:25px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .feature{grid-template-columns:24px minmax(0,1fr);padding:12px}
+  .runtime{min-width:0}
+  .pdf-toolbar{gap:6px;padding:9px}
+  .pdf-toolbar input{width:58px}
+  .device-row{align-items:stretch}
+  .device-row button{flex:1}
+  .agent-files{grid-template-columns:minmax(0,1fr)}
+  .model-message{max-width:100%}
+  .sheet-grid th{min-width:38px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
