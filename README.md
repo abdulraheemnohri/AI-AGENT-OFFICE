@@ -10,7 +10,7 @@ Offline-first Windows desktop productivity workspace built with Tauri 2, React, 
 - Spreadsheet grid with CSV import/export, first-worksheet XLSX import/export, cell editing, row/column controls and local formulas (arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX and COUNT).
 - Presentation outline editor with slide add/delete/edit/reorder/duplicate, Markdown outline export, basic PPTX text import and editable PPTX title/body slide export.
 - Local task checklist with deterministic safe-plan generation and optional LiteRT-LM-generated task proposals. Proposed steps are not executed automatically.
-- Locally persisted UI preferences: dark/light/system theme, compact/comfortable density, font size, spell-check toggle/language, autosave delay/recovery, overwrite confirmation, offline preference and print page layout.
+- Locally persisted UI preferences: dark/light/system theme, compact/comfortable density, font size, spell-check toggle/language, configurable CSV delimiter, autosave delay/recovery, restore/overwrite confirmation, offline preference and print page layout.
 - Windows print integration through the WebView print dialog for installed local/network printers and Windows PDF printers.
 - Windows removable USB storage detection and guarded document/CSV/full-workspace backup export to detected removable drives.
 - PC file import/export for text/Markdown, DOCX text, CSV, first-sheet XLSX and PPTX title/body slides.
