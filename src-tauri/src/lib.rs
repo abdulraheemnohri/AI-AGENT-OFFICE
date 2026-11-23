@@ -47,7 +47,15 @@ fn save_to_usb(drive_root: String, filename: String, content: String) -> Result<
         let clean = clean.trim().trim_matches('.');
         if clean.is_empty() || clean.len() > 120 { return Err("Invalid export filename".into()); }
         let target = PathBuf::from(&drive_root).join(clean);
-        fs::write(&target, content.as_bytes()).map_err(|e| format!("USB write failed: {}", e))?;
+        // create_new is atomic on Windows: never overwrite an existing USB file,
+        // even if another process creates it after the UI confirmation.
+        use std::io::Write;
+        let mut file = fs::OpenOptions::new().write(true).create_new(true).open(&target)
+            .map_err(|e| if e.kind() == std::io::ErrorKind::AlreadyExists {
+                "A file with that name already exists on the USB drive; rename or remove it first".to_string()
+            } else { format!("USB write failed: {}", e) })?;
+        file.write_all(content.as_bytes()).map_err(|e| format!("USB write failed: {}", e))?;
+        file.sync_all().map_err(|e| format!("USB flush failed: {}", e))?;
         Ok(target.to_string_lossy().into_owned())
     }
     #[cfg(not(windows))] { let _ = (drive_root, filename, content); Err("USB removable-drive export is supported on Windows only".into()) }
