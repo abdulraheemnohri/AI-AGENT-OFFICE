@@ -13,10 +13,15 @@ function docxParagraphText(xml: string): string {
       + [...run.matchAll(/<w:tab\s*\/>/g)].map(() => "\t").join("")
       + [...run.matchAll(/<w:br(?:\s[^>]*)?\/>/g)].map(() => "\n").join("");
     if (!value) continue;
+    const leading = value.match(/^\s+/)?.[0] || "";
+    const trailing = value.match(/\s+$/)?.[0] || "";
+    const core = value.slice(leading.length, value.length - trailing.length || value.length);
+    if (!core) { runs.push(value); continue; }
     const bold = /<w:b(?:\s[^>]*)?\/>/.test(run) && !/<w:b[^>]*w:val="(?:0|false|off)"/.test(run);
     const italic = /<w:i(?:\s[^>]*)?\/>/.test(run) && !/<w:i[^>]*w:val="(?:0|false|off)"/.test(run);
     const strike = /<w:strike(?:\s[^>]*)?\/>/.test(run);
-    runs.push(strike ? "~~" + value + "~~" : bold && italic ? "***" + value + "***" : bold ? "**" + value + "**" : italic ? "*" + value + "*" : value);
+    const formatted = strike ? "~~" + core + "~~" : bold && italic ? "***" + core + "***" : bold ? "**" + core + "**" : italic ? "*" + core + "*" : core;
+    runs.push(leading + formatted + trailing);
   }
   if (runs.length) return runs.join("");
   return [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(part => decodeXmlText(part[1])).join("");
@@ -601,7 +606,7 @@ export async function importOdsWorkbook(bytes: ArrayBuffer): Promise<OdsWorkshee
         const body = cell[3] || "";
         const formula = attrs.match(/table:formula="([^"]*)"/)?.[1];
         let value = "";
-        if (formula) value = "=" + decodeXmlEntities(formula.replace(/^of:=/, "").replace(/\[\./g, "").replace(/\]/g, "").replace(/;/g, ","));
+        if (formula) value = "=" + decodeXmlEntities(formula.replace(/^of:=/, "").replace(/\[\./g, "").replace(/:\./g, ":").replace(/\]/g, "").replace(/;/g, ","));
         else {
           const text = odfParagraphs(body).join("\n");
           value = text || decodeXmlEntities(attrs.match(/office:(?:string-value|value|date-value|time-value)="([^"]*)"/)?.[1] || "");
@@ -620,7 +625,9 @@ export async function importOdsWorkbook(bytes: ArrayBuffer): Promise<OdsWorkshee
 }
 
 function odfFormula(value: string): string {
-  return value.slice(1).replace(/(\$?[A-Z]{1,3}\$?\d+)/g, "[$.$1]").replace(/,/g, ";");
+  const expression = value.slice(1);
+  const withRanges = expression.replace(/(\$?[A-Z]{1,3}\$?\d+):(\$?[A-Z]{1,3}\$?\d+)/g, (_match, first: string, last: string) => "[." + first + ":." + last + "]");
+  return withRanges.replace(/(?<![A-Z0-9.$])(\$?[A-Z]{1,3}\$?\d+)(?![A-Z0-9])/g, (_match, cell: string) => "[." + cell + "]").replace(/,/g, ";");
 }
 
 export async function exportOdsWorkbook(sheets: OdsWorksheet[]): Promise<Blob> {
