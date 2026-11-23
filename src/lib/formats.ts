@@ -195,3 +195,52 @@ export function exportRtf(markdown: string): Blob {
   }).join("");
   return new Blob(["{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\\f0\\fs22 ", paragraphs, "}"], { type: "application/rtf" });
 }
+
+export type XlsxWorksheet = { name: string; cells: string[][] };
+
+/** Import every worksheet in workbook order; formulas remain editable strings. */
+export function importXlsxWorkbook(bytes: ArrayBuffer): XlsxWorksheet[] {
+  const workbook = XLSX.read(bytes, { type: "array", cellFormula: true });
+  if (!workbook.SheetNames.length) throw new Error("The workbook contains no worksheets");
+  return workbook.SheetNames.map((name) => {
+    const sheet = workbook.Sheets[name];
+    const range = sheet["!ref"] ? XLSX.utils.decode_range(sheet["!ref"]) : { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
+    const cells: string[][] = [];
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const row: string[] = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cell = sheet[XLSX.utils.encode_cell({ r, c })] as XLSX.CellObject | undefined;
+        row.push(cell?.f ? "=" + cell.f : cell?.w ?? (cell?.v == null ? "" : String(cell.v)));
+      }
+      cells.push(row);
+    }
+    return { name, cells };
+  });
+}
+
+/** Export all worksheets, retaining formulas as native Excel formula cells. */
+export function exportXlsxWorkbook(sheets: XlsxWorksheet[]): Blob {
+  if (!sheets.length) throw new Error("Add at least one worksheet before exporting");
+  const workbook = XLSX.utils.book_new();
+  const used = new Set<string>();
+  for (const item of sheets) {
+    const base = (item.name.trim() || "Sheet").replace(/[\\\\/?*\\[\\]:]/g, " ").slice(0, 31) || "Sheet";
+    let name = base;
+    let suffix = 2;
+    while (used.has(name.toLowerCase())) {
+      const tail = " (" + suffix++ + ")";
+      name = base.slice(0, 31 - tail.length) + tail;
+    }
+    used.add(name.toLowerCase());
+    const sheet = XLSX.utils.aoa_to_sheet(item.cells.map((row) => row.map((value) => value.startsWith("=") ? null : value)));
+    item.cells.forEach((row, r) => row.forEach((value, c) => {
+      if (value.startsWith("=")) {
+        const address = XLSX.utils.encode_cell({ r, c });
+        sheet[address] = { t: "n", f: value.slice(1), v: 0 };
+      }
+    }));
+    XLSX.utils.book_append_sheet(workbook, sheet, name);
+  }
+  const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+  return new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
