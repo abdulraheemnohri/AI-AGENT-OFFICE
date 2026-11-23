@@ -42,6 +42,16 @@ describe("workspace backup", () => {
     await expect(decryptBackupText(encrypted, "wrong password")).rejects.toThrow(/incorrect|modified/);
   });
 
+  it("uses a fresh encryption salt and rejects ciphertext tampering", async () => {
+    const raw = JSON.stringify(createBackup(data));
+    const first = await encryptBackupText(raw, "correct horse battery");
+    const second = await encryptBackupText(raw, "correct horse battery");
+    expect(first).not.toBe(second);
+    const tampered = JSON.parse(first) as { payload: string };
+    tampered.payload = (tampered.payload[0] === "A" ? "B" : "A") + tampered.payload.slice(1);
+    await expect(decryptBackupText(JSON.stringify(tampered), "correct horse battery")).rejects.toThrow(/incorrect|modified/);
+  });
+
   it("rejects weak passwords and invalid encrypted backup envelopes", async () => {
     await expect(encryptBackupText("{}", "short")).rejects.toThrow(/10 and 1024/);
     await expect(decryptBackupText('{"format":"unknown"}', "password")).rejects.toThrow(/Unsupported/);
