@@ -1,28 +1,82 @@
-# Roadmap
+# AI Agent Office — implementation checklist
 
-0 Foundation: desktop shell, dashboard, settings, native text open/save and CI.
-1 File engine: recent-file database, LibreOffice interoperability, DOCX/ODT round-trip and PDF viewing.
-2 Editors: Writer model, Sheets grid/formulas, Slides canvas/PPTX and PDF page tools.
-3 Local AI: runtime contract, llama.cpp GGUF, model import/checksums/load/unload, ONNX and embeddings.
-4 AI office: chat, streaming, RAG, citations, OCR and editor assistants.
-5 Agents: scoped tools, plan/approve/execute/verify, workflow builder and audit.
-6 Production: compatibility/security/performance tests, Windows validation, NSIS/MSI and signed releases.
+All ongoing work is committed to `development`. Do not merge to `main` without an explicit release decision.
 
-A milestone is complete only when code, tests and documentation exist.
+Legend: [x] implemented in the repository; [ ] remaining or not yet verified. Basic format support is not equivalent to full Office compatibility.
 
-## Current milestone additions
-- Implemented PC document import/export, CSV and slide outline exports, and versioned workspace JSON backup/restore.
-- Implemented a local Google LiteRT-LM Python API bridge with CPU/GPU selection; runtime/model assets remain a separate offline payload.
-- Added Windows offline payload preparation, local-wheel installation and installer packaging scripts.
-- Still required for a truly self-contained offline installer: bundle a tested Python runtime, LiteRT-LM native dependencies, and licensed model weights; verify on a clean Windows machine without internet.
+## Completed and present in GitHub
 
-## Office format implementation update
-- Added DOCX text import and basic DOCX/RTF export, XLSX first-sheet import/export, PPTX text import and title/body export, plus PDF merge/extract/rotate/delete/reorder/duplicate/blank-page/text-stamp workflows.
-- Added full-workspace autosave recovery, restore confirmation and explicit local-data reset. Added LiteRT-LM reasoning controls, configurable token budgets and experimental NPU backend selection.
-- Added automated format tests for DOCX, XLSX, PPTX and PDF operations.
-- Added a multi-worksheet XLSX engine and Sheets UI with import/export of all worksheets, worksheet add/delete/rename, formula preservation, and backup/autosave persistence. Added tests for round-trip, duplicate/invalid sheet names and backup validation.
-- Remaining format fidelity work: DOCX style/layout round-trip, XLSX styles/charts/pivots and broader formula compatibility, PPTX visual canvas and layout fidelity, ODT/ODS/ODP/RTF import, and PDF OCR/forms/signatures/annotation.
+- [x] Tauri 2 + React + TypeScript + Rust Windows desktop foundation.
+- [x] Dashboard and navigation: Home, Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes, Devices & Printing, Data & Backup and Settings.
+- [x] Writer Markdown/text editing, preview, find/replace, word count, native open/save and local recovery.
+- [x] Basic DOCX, RTF and ODT text import/export.
+- [x] CSV editing/import/export; multi-sheet XLSX and ODS import/export.
+- [x] Spreadsheet formula subset, formula results, sort, filter, header preservation, worksheet tabs, insert/delete rows and columns by position.
+- [x] Slide outline editing and basic PPTX/ODP text import/export.
+- [x] PDF preview, merge, extract, rotate, reorder, duplicate, delete, blank-page insertion, text stamp, flattened highlight/note and basic AcroForm filling.
+- [x] Local AI checklist and LiteRT-LM bridge; model proposals are not autonomously executed.
+- [x] Scoped local file tools with confirmation and traversal/symlink protections.
+- [x] Windows print dialog and removable USB storage exports.
+- [x] PC file import/export, versioned workspace JSON backup/restore and password-protected AES-GCM backup.
+- [x] Local preferences: theme, density, editor font, autosave/recovery, print setup, CSV delimiter, spell-check and preference validation.
+- [x] Windows offline preparation scripts and fallback icon generation.
+- [x] CI frontend build/tests and Rust cargo check passed in run 45240949775, commit 9f02a9ee.
+- [x] Adaptive layout implementation: 320px+ phone, tablet, laptop and desktop breakpoints; mobile horizontal navigation; reflowing cards/toolbars/editors; reduced-motion support; removed fixed 850px page width.
 
-## OpenDocument milestone
-- Added local ODT text import/export, RTF text import, ODS multi-sheet workbook import/export and ODP slide text import/export.
-- Added format round-trip tests. Rich layout, embedded media and advanced Office features remain out of scope for these basic converters.
+## Remaining implementation backlog
+
+### P0 — reliability and release
+- [ ] Clean Windows 10/11 build, installer and upgrade/uninstall validation.
+- [ ] Verify offline installation on a clean PC with network disconnected; document WebView2/Python/runtime prerequisites.
+- [ ] Signed Windows installer, versioning, release artifacts and rollback guide.
+- [ ] Review npm audit vulnerabilities and upgrade dependencies safely.
+- [ ] End-to-end UI tests for navigation, import/export, restore and destructive confirmations.
+- [ ] Crash-safe atomic writes, backup retention and recovery verification.
+
+### P1 — adaptive UI and accessibility
+- [ ] Manually verify 320, 360, 390, 768, 1024, 1366px and ultrawide viewports in Windows WebView.
+- [ ] Keyboard navigation, visible focus, screen-reader labels, contrast and accessible dialogs.
+- [ ] User-configurable interface scaling and per-screen density, if device testing requires it.
+- [ ] Verify PDF, data grids and dialogs at 125–200% Windows DPI scaling.
+
+### P1 — Sheets and Slides
+- [ ] Cell formatting: number/date/currency, font, fill, borders, alignment and wrapping.
+- [ ] Data validation: dropdowns, numeric/date bounds and invalid-value feedback.
+- [ ] Editable charts and export; more Excel-compatible formulas, named ranges and conditional formatting.
+- [ ] Freeze panes, pivot tables and advanced XLSX formatting compatibility.
+- [ ] Visual slide canvas, shapes, images, themes, notes, transitions and media.
+- [ ] Higher-fidelity PPTX/ODP import/export and undo/redo.
+
+### P1 — PDF and Writer
+- [ ] Offline OCR engine and language packs with checksum validation.
+- [ ] Searchable PDF text extraction and page thumbnails.
+- [ ] Native editable PDF comments and freehand ink.
+- [ ] Secure redaction that removes underlying content and is automatically verified.
+- [ ] Certificate-based digital signatures and validation.
+- [ ] Rich DOCX/ODT editing: tables, images, styles, headers/footers and page layout.
+
+### P2 — local AI and agents
+- [ ] Model download manager with source/license, size, checksum and storage checks.
+- [ ] Runtime compatibility detection, model unload and resource monitoring.
+- [ ] Offline speech-to-text, text-to-speech and vision workflows.
+- [ ] Local document indexing, embeddings, RAG and source citations.
+- [ ] Tool execution with permission scopes, per-action approval and audit log.
+- [ ] Workflow builder, triggers, schedules, retry policies and run history.
+- [ ] Enforced network isolation; current offline preference is not a firewall.
+
+### P2 — data and devices
+- [ ] Scheduled encrypted backups, retention and restore-point browser.
+- [ ] Optional backup of explicitly approved agent folders.
+- [ ] Optional fixed USB disk detection and safe-eject workflow; serial/HID/MTP only after explicit scope.
+- [ ] Printer queue/status and printer-specific capabilities where Windows APIs permit.
+
+### P3 — product polish
+- [ ] First-run setup wizard and diagnostics.
+- [ ] In-app help, keyboard shortcut reference and troubleshooting.
+- [ ] Optional donation/support page; no mandatory subscription.
+- [ ] Security threat model, privacy review and dependency/license inventory.
+- [ ] Public release checklist and support policy.
+
+## Definition of done
+
+Mark a feature complete only after implementation, automated tests, documentation and passing CI. Platform-specific functionality also requires a real Windows validation pass. Placeholder adapters and unverified hardware integrations stay unchecked.
