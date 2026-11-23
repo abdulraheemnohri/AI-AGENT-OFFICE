@@ -28,7 +28,8 @@
 ## AI and device integration
 - Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU/NPU backend selection (NPU is hardware/runtime dependent), configurable thinking mode, thinking-token budget, output-token limit, runtime check, local prompt/response and persisted local chat history.
 - LiteRT-LM Python package and model weights are not embedded in the default application installer. Use the offline preparation scripts to assemble an offline payload.
-- AI Agent page is a local task checklist and deterministic safe-plan template; it does not execute commands or operate on the PC.
+- AI Agent page supports a deterministic safe checklist and optional LiteRT-LM-generated task proposals. Proposed steps are added as checklist items; they are not executed automatically.
+- Scoped local file tools allow the user to choose one folder, list top-level files, read UTF-8 text, create/edit/save and delete individual files. File writes and deletes require confirmation; path traversal and symlink escapes are rejected. Access can be revoked from the page.
 - Printer action opens the Windows/WebView print dialog and uses the configured page size, orientation and margins.
 - Windows USB detection lists drives classified as DRIVE_REMOVABLE. Export current text document, CSV or full JSON workspace backup. Some external USB drives report DRIVE_FIXED and are not listed. No USB serial/HID/camera/MTP support.
 
