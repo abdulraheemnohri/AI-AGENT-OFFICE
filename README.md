@@ -7,7 +7,7 @@ Offline-first Windows desktop productivity workspace built with Tauri 2, React, 
 ## Working features in this branch
 - Dashboard and navigation across Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes and Settings.
 - Writer for UTF-8 plain text and Markdown, with edit/preview, word and character counts, find/replace-all, native open/save and optional local recovery snapshot.
-- CSV spreadsheet grid with quoted CSV import, cell editing, row extension and CSV export.
+- CSV spreadsheet grid with quoted CSV import, cell editing, row extension, CSV export and an initial local formula engine (arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX and COUNT).
 - Presentation outline editor with slide add/delete/edit and Markdown outline export.
 - Local task checklist and safe-plan template (deterministic; no AI inference or system command execution).
 - Locally persisted UI preferences: theme, editor font size, autosave recovery, offline preference and telemetry preference.
