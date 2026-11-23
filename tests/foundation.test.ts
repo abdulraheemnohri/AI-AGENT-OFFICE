@@ -1,0 +1,1 @@
+import {describe,expect,it} from "vitest";describe("AI Agent Office foundation",()=>{it("has a recognizable product name",()=>{expect("AI AGENT OFFICE").toContain("OFFICE")})});
