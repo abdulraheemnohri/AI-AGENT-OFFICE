@@ -170,3 +170,17 @@ export function deleteWorkbookColumn(workbook: Workbook, index: number): Workboo
   if (!Number.isInteger(index) || index < 0) return workbook.map(row => [...row]);
   return workbook.map(row => { const next = [...row]; if (index < next.length) next.splice(index, 1); return next.length ? next : [""]; });
 }
+
+export type ListValidationRule = { type: "list"; options: string[]; allowBlank?: boolean };
+
+/** Validate a literal cell value against a configured dropdown list. Formulas remain permitted. */
+export function validateCellValue(value: string, rule?: ListValidationRule): { valid: boolean; reason?: string } {
+  if (!rule || rule.type !== "list") return { valid: true };
+  const candidate = value.trim();
+  if (!candidate && rule.allowBlank !== false) return { valid: true };
+  if (candidate.startsWith("=")) return { valid: true };
+  const options = rule.options.map(option => option.trim()).filter(Boolean);
+  if (!options.length) return { valid: true };
+  const valid = options.some(option => option.localeCompare(candidate, undefined, { sensitivity: "accent" }) === 0);
+  return valid ? { valid: true } : { valid: false, reason: "Choose a value from the column dropdown list." };
+}
