@@ -90,7 +90,7 @@ export async function exportDocx(markdown: string): Promise<Blob> {
       return new Paragraph({ children: markdownTextRuns(heading[2]), heading: level });
     }
     if (line.startsWith("- ")) return new Paragraph({ children: markdownTextRuns(line.slice(2)), bullet: { level: 0 } });
-    if (/^\d+\.\s/.test(line)) return new Paragraph({ children: markdownTextRuns(line.replace(/^\d+\.\s/, "")), numbering: { reference: "default-numbering", level: 0 } });
+    if (/^\d+\.\s/.test(line)) return new Paragraph({ children: markdownTextRuns(line.replace(/^\d+\.\s/, "")), bullet: { level: 0 } });
     return new Paragraph({ children: markdownTextRuns(line) });
   });
   return Packer.toBlob(new Document({ sections: [{ children }] }));
