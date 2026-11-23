@@ -18,6 +18,6 @@ A milestone is complete only when code, tests and documentation exist.
 
 ## Office format implementation update
 - Added DOCX text import and basic DOCX/RTF export, XLSX first-sheet import/export, PPTX text import and title/body export, plus PDF merge/extract/rotate/delete/reorder/duplicate/blank-page/text-stamp workflows.
-- Added full-workspace autosave recovery, restore confirmation and explicit local-data reset.
+- Added full-workspace autosave recovery, restore confirmation and explicit local-data reset. Added LiteRT-LM reasoning controls, configurable token budgets and experimental NPU backend selection.
 - Added automated format tests for DOCX, XLSX, PPTX and PDF operations.
 - Remaining format fidelity work: DOCX style/layout round-trip, XLSX multiple sheets/styles/charts/pivots, PPTX visual canvas and layout fidelity, ODT/ODS/ODP/RTF import, multi-sheet XLSX, and PDF OCR/forms/signatures/annotation.
