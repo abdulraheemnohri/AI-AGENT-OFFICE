@@ -78,7 +78,24 @@ export function evaluateWorkbook(workbook: Workbook): CellValue[][] {
               if(peek().value!==")"){while(true){if(peek().type==="word"&&parseCellAddress(peek().value)&&tokens[at+1]?.value===":"){const a=take().value;take(":");const b=take().value;args.push(expandRange(a,b));}else args.push(expression());if(peek().value!==",")break;take(",");}}
               take(")");
               const flat=args.flatMap(x=>Array.isArray(x)?x:[x]).map(numeric);
-              switch(name){case "SUM":return flat.reduce((a,b)=>a+b,0);case "AVERAGE":return flat.length?flat.reduce((a,b)=>a+b,0)/flat.length:0;case "MIN":return flat.length?Math.min(...flat):0;case "MAX":return flat.length?Math.max(...flat):0;case "COUNT":return flat.length;default:throw new Error("Unknown function");}
+              const one=()=>{if(args.length!==1)throw new Error("Wrong argument count");return numeric(args[0]);};
+              const two=()=>{if(args.length!==2)throw new Error("Wrong argument count");return [numeric(args[0]),numeric(args[1])] as const;};
+              const rounded=(value:number,digits:number,mode:"nearest"|"up"|"down")=>{if(!Number.isInteger(digits)||Math.abs(digits)>10)throw new Error("Invalid decimal places");const scale=10**digits;const scaled=value*scale;const adjusted=mode==="up"?Math.sign(scaled)*Math.ceil(Math.abs(scaled)-1e-10):mode==="down"?Math.sign(scaled)*Math.floor(Math.abs(scaled)+1e-10):Math.sign(scaled)*Math.floor(Math.abs(scaled)+0.5+1e-10);return adjusted/scale;};
+              switch(name){
+                case "SUM":return flat.reduce((a,b)=>a+b,0);
+                case "AVERAGE":return flat.length?flat.reduce((a,b)=>a+b,0)/flat.length:0;
+                case "MIN":return flat.length?Math.min(...flat):0;
+                case "MAX":return flat.length?Math.max(...flat):0;
+                case "COUNT":return flat.length;
+                case "PRODUCT":return flat.reduce((a,b)=>a*b,1);
+                case "MEDIAN":{if(!flat.length)return 0;const sorted=[...flat].sort((a,b)=>a-b);const mid=Math.floor(sorted.length/2);return sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;}
+                case "ABS":return Math.abs(one());
+                case "SQRT":{const v=one();if(v<0)throw new Error("Invalid square root");return Math.sqrt(v);}
+                case "POWER":{const [a,b]=two();return Math.pow(a,b);}
+                case "MOD":{const [a,b]=two();if(b===0)throw new Error("Division by zero");return a-Math.floor(a/b)*b;}
+                case "ROUND":case "ROUNDUP":case "ROUNDDOWN":{const [v,d]=two();return rounded(v,d,name==="ROUND"?"nearest":name==="ROUNDUP"?"up":"down");}
+                default:throw new Error("Unknown function");
+              }
             }
             const ref=parseCellAddress(name);if(!ref)throw new Error("Unknown name");
             const v=readCell(ref.row,ref.col);if(typeof v==="string"&&v.startsWith("#"))throw new Error(v);return v===""?0:numeric(v);
