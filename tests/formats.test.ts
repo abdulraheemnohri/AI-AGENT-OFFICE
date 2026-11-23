@@ -102,7 +102,7 @@ describe("Office format engines", () => {
     const text = await importOdt(await blob.arrayBuffer());
     expect(text).toContain("Annual report");
     expect(text).toContain("Local document");
-    expect(text).toContain("• First item");
+    expect(text).toContain("- First item");
   });
 
   it("imports common RTF paragraphs, escaped characters and Unicode", () => {
