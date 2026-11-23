@@ -43,7 +43,7 @@
 - Windows scripts prepare local Python wheels, optional Python/WebView2/model installers and application installer packaging. The Rust build script generates a fallback Windows ICO before Tauri bundle validation so a clean checkout can build without a separately committed binary icon. The output still requires clean-machine offline verification.
 
 ## Not implemented / next milestones
-- Full-fidelity DOCX editor, ODT/ODS/ODP/RTF import and complete format round-trip.
+- Full-fidelity DOCX/ODT/RTF editor, OpenDocument formatting and full layout/media round-trip.
 - Advanced spreadsheet formulas, charts, pivot tables, workbook styling and formula compatibility beyond the built-in arithmetic/aggregate subset.
 - Visual PowerPoint canvas, full PPTX import fidelity and animation/media editing.
 - PDF OCR, annotation suite, signatures, forms, redaction and page thumbnails.
