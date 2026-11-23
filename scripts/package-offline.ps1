@@ -20,7 +20,7 @@ $dist = Join-Path $bundle "application-installers"
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 $installers | Copy-Item -Destination $dist -Force
 $zip = Join-Path $root "AI-Agent-Office-Offline-Windows.zip"
+Copy-Item (Join-Path $PSScriptRoot "Install-AI-Agent-Office-Offline.ps1") (Join-Path $bundle "Install-AI-Agent-Office-Offline.ps1") -Force
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path (Join-Path $bundle "*") -DestinationPath $zip -CompressionLevel Optimal
-Copy-Item (Join-Path $PSScriptRoot "Install-AI-Agent-Office-Offline.ps1") (Join-Path $bundle "Install-AI-Agent-Office-Offline.ps1") -Force
 Write-Host "Offline distribution created: $zip"
