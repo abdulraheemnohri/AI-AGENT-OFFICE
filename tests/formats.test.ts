@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
-import { exportDocx, exportPptx, exportXlsx, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage } from "../src/lib/formats";
+import { exportDocx, exportPptx, exportXlsx, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage, importXlsxWorkbook, exportXlsxWorkbook } from "../src/lib/formats";
 
 describe("Office format engines", () => {
   it("exports and imports a basic DOCX as editable text", async () => {
@@ -18,6 +18,30 @@ describe("Office format engines", () => {
       expect(workbook.cells[1][1]).toBe("=SUM(B2:B3)");
       expect(workbook.cells[2][1]).toBe("10");
     });
+  });
+
+
+  it("round-trips every worksheet and formulas in a multi-sheet XLSX", async () => {
+    const blob = exportXlsxWorkbook([
+      { name: "Summary", cells: [["Metric", "Value"], ["Total", "=SUM(B3:B4)"], ["A", "12"], ["B", "8"]] },
+      { name: "Details", cells: [["Item", "Count"], ["Cable", "4"], ["Switch", "2"]] }
+    ]);
+    const sheets = importXlsxWorkbook(await blob.arrayBuffer());
+    expect(sheets).toHaveLength(2);
+    expect(sheets.map(sheet => sheet.name)).toEqual(["Summary", "Details"]);
+    expect(sheets[0].cells[1][1]).toBe("=SUM(B3:B4)");
+    expect(sheets[1].cells[1][0]).toBe("Cable");
+  });
+
+  it("creates unique valid worksheet names on export", async () => {
+    const blob = exportXlsxWorkbook([
+      { name: "Budget/2026", cells: [["1"]] },
+      { name: "budget 2026", cells: [["2"]] }
+    ]);
+    const sheets = importXlsxWorkbook(await blob.arrayBuffer());
+    expect(sheets).toHaveLength(2);
+    expect(new Set(sheets.map(sheet => sheet.name.toLowerCase())).size).toBe(2);
+    expect(sheets[0].name).not.toContain("/");
   });
 
   it("exports a basic RTF document", () => {
