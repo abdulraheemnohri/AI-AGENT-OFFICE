@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
-import { exportDocx, exportPptx, exportXlsx, exportOdt, importOdt, importRtf, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage, highlightPdfArea, addPdfNote, importXlsxWorkbook, exportXlsxWorkbook, importOdsWorkbook, exportOdsWorkbook, importOdp, exportOdp } from "../src/lib/formats";
+import { exportDocx, exportPptx, exportXlsx, exportOdt, importOdt, importRtf, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, listPdfFormFields, fillPdfForm, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage, highlightPdfArea, addPdfNote, importXlsxWorkbook, exportXlsxWorkbook, importOdsWorkbook, exportOdsWorkbook, importOdp, exportOdp } from "../src/lib/formats";
 
 describe("Office format engines", () => {
   it("exports and imports a basic DOCX as editable text", async () => {
@@ -94,6 +94,24 @@ describe("Office format engines", () => {
     expect(await pdfPageCount(stamped)).toBe(3);
     const deleted = await deletePdfPage(stamped, 2);
     expect(await pdfPageCount(deleted)).toBe(2);
+  });
+
+  it("inspects and fills standard PDF text and checkbox fields", async () => {
+    const source = await PDFDocument.create();
+    const page = source.addPage([400, 500]);
+    const form = source.getForm();
+    const name = form.createTextField("Full Name");
+    name.addToPage(page);
+    const consent = form.createCheckBox("Consent");
+    consent.addToPage(page);
+    const original = await source.save();
+    const fields = await listPdfFormFields(original);
+    expect(fields.map(field => field.name)).toEqual(["Full Name", "Consent"]);
+    const updated = await fillPdfForm(original, { "Full Name": "Abdul", Consent: true });
+    const reopened = await PDFDocument.load(updated);
+    expect(reopened.getForm().getTextField("Full Name").getText()).toBe("Abdul");
+    expect(reopened.getForm().getCheckBox("Consent").isChecked()).toBe(true);
+    await expect(fillPdfForm(original, { Unknown: "x" })).rejects.toThrow(/Unknown PDF form field/);
   });
 
   it("adds bounded flattened highlights and note boxes to PDF pages", async () => {
