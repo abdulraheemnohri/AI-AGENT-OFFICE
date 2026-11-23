@@ -175,3 +175,31 @@ export async function insertBlankPdfPage(bytes: Uint8Array, afterPage: number): 
   source.insertPage(afterPage, [size.width, size.height]);
   return source.save();
 }
+
+export async function importPptx(bytes: ArrayBuffer): Promise<{ title: string; body: string }[]> {
+  const zip = await (await import("jszip")).default.loadAsync(bytes);
+  const names = Object.keys(zip.files).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+    .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1] || 0) - Number(b.match(/slide(\d+)/)?.[1] || 0));
+  if (!names.length) throw new Error("No presentation slides were found");
+  const slides: { title: string; body: string }[] = [];
+  for (const name of names) {
+    const file = zip.file(name);
+    if (!file) continue;
+    const xml = await file.async("string");
+    const parsed = new DOMParser().parseFromString(xml, "application/xml");
+    const text = Array.from(parsed.getElementsByTagName("a:t")).map((node) => node.textContent || "").filter(Boolean);
+    slides.push({ title: text.shift() || "Slide " + (slides.length + 1), body: text.join("\n") });
+  }
+  return slides;
+}
+
+export function exportRtf(markdown: string): Blob {
+  const escape = (value: string) => value.replace(/\\/g, "\\\\").replace(/{/g, "\\{").replace(/}/g, "\\}").replace(/[^\x00-\x7F]/g, (char) => "\\u" + (char.charCodeAt(0) > 32767 ? char.charCodeAt(0) - 65536 : char.charCodeAt(0)) + "?");
+  const paragraphs = markdown.split(/\r?\n/).map((line) => {
+    const heading = line.match(/^#{1,3}\s+(.*)$/);
+    if (heading) return "\\pard\\b\\fs30 " + escape(heading[1]) + "\\b0\\fs22\\par";
+    if (line.startsWith("- ")) return "\\pard\\li360\\fi-180 \\bullet\\tab " + escape(line.slice(2)) + "\\par";
+    return "\\pard " + escape(line) + "\\par";
+  }).join("");
+  return new Blob(["{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\\f0\\fs22 ", paragraphs, "}"], { type: "application/rtf" });
+}
