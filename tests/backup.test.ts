@@ -20,6 +20,13 @@ describe("workspace backup", () => {
     expect(() => parseBackup(JSON.stringify({ ...createBackup(data), schemaVersion: 9 }))).toThrow(/Unsupported/);
     expect(() => parseBackup(JSON.stringify({ ...createBackup(data), data: { ...data, workbook: { name: "bad", cells: [1] } } }))).toThrow(/workbook/);
   });
+  it("round-trips multiple worksheets and rejects malformed sheet collections", () => {
+    const backup = createBackup({ ...data, workbook: { ...data.workbook, sheets: [{ name: "Budget", cells: [["A", "1"]] }, { name: "Forecast", cells: [["B", "2"]] }] } });
+    expect(parseBackup(JSON.stringify(backup)).data.workbook.sheets).toHaveLength(2);
+    const invalid = { ...backup, data: { ...backup.data, workbook: { ...backup.data.workbook, sheets: [{ name: "Bad", cells: [1] }] } } };
+    expect(() => parseBackup(JSON.stringify(invalid))).toThrow(/worksheets/);
+  });
+
   it("round-trips a small PDF payload and rejects invalid PDF backup data", () => {
     const backup = createBackup({ ...data, pdf: { name: "sample.pdf", base64: "JVBERi0=" } });
     expect(parseBackup(JSON.stringify(backup)).data.pdf).toEqual({ name: "sample.pdf", base64: "JVBERi0=" });
