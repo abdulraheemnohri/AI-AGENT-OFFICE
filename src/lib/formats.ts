@@ -176,6 +176,63 @@ export async function pdfPageCount(bytes: Uint8Array): Promise<number> {
   return doc.getPageCount();
 }
 
+
+
+export type PdfFormFieldInfo = { name: string; type: string; value: string | boolean | string[] | null; options?: string[] };
+
+/** Lists standard AcroForm fields. XFA and digital-signature fields are not editable by this helper. */
+export async function listPdfFormFields(bytes: Uint8Array): Promise<PdfFormFieldInfo[]> {
+  const doc = await PDFDocument.load(bytes);
+  const form = doc.getForm();
+  return form.getFields().map(field => {
+    const item = field as unknown as {
+      getText?: () => string;
+      isChecked?: () => boolean;
+      getSelected?: () => string | string[];
+      getOptions?: () => string[];
+    };
+    const name = field.getName();
+    if (typeof item.getText === "function") return { name, type: "text", value: item.getText() };
+    if (typeof item.isChecked === "function") return { name, type: "checkbox", value: item.isChecked() };
+    if (typeof item.getSelected === "function") {
+      const value = item.getSelected();
+      const options = typeof item.getOptions === "function" ? item.getOptions() : undefined;
+      return { name, type: field.constructor.name.replace(/^PDF/, "").replace(/(Dropdown|RadioGroup|OptionList)/, "select").toLowerCase(), value, ...(options ? { options } : {}) };
+    }
+    return { name, type: field.constructor.name.replace(/^PDF/, "").toLowerCase(), value: null };
+  });
+}
+
+/** Fills standard text, checkbox, dropdown, radio and option-list fields without flattening them. */
+export async function fillPdfForm(bytes: Uint8Array, values: Record<string, string | boolean | string[]>): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes);
+  const form = doc.getForm();
+  const known = new Set(form.getFields().map(field => field.getName()));
+  for (const [name, value] of Object.entries(values)) {
+    if (!known.has(name)) throw new Error("Unknown PDF form field: " + name);
+    const field = form.getField(name) as unknown as {
+      setText?: (value: string) => void;
+      check?: () => void;
+      uncheck?: () => void;
+      select?: (value: string | string[]) => void;
+    };
+    if (typeof field.setText === "function") {
+      if (typeof value !== "string") throw new Error("Text field " + name + " requires a string value");
+      field.setText(value);
+    } else if (typeof field.check === "function" && typeof field.uncheck === "function") {
+      if (typeof value !== "boolean") throw new Error("Checkbox field " + name + " requires true or false");
+      if (value) field.check(); else field.uncheck();
+    } else if (typeof field.select === "function") {
+      if (typeof value !== "string" && !Array.isArray(value)) throw new Error("Choice field " + name + " requires a string or string array");
+      field.select(value as string | string[]);
+    } else {
+      throw new Error("PDF form field " + name + " is not a supported standard field type");
+    }
+  }
+  form.updateFieldAppearances();
+  return doc.save();
+}
+
 export async function mergePdfs(files: Uint8Array[]): Promise<Uint8Array> {
   if (files.length < 2) throw new Error("Select at least two PDF files to merge");
   const merged = await PDFDocument.create();
