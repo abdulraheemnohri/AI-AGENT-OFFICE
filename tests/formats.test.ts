@@ -186,4 +186,45 @@ describe("Office format engines", () => {
     await expect(highlightPdfArea(bytes, 2, { x: 1, y: 1, width: 10, height: 10 })).rejects.toThrow(/page number/);
   });
 
+
+  it("adds page-relative PDF highlight and note overlays", async () => {
+    const source = await PDFDocument.create();
+    source.addPage([612, 792]);
+    const bytes = await source.save();
+    const highlighted = await highlightPdfArea(bytes, 1, 10, 10, 30, 12);
+    const noted = await addPdfNote(highlighted, 1, 10, 10, 40, 20, "Review this section");
+    expect(await pdfPageCount(noted)).toBe(1);
+    await expect(highlightPdfArea(bytes, 1, 90, 90, 20, 20)).rejects.toThrow(/inside the page/);
+  });
+
+  it("inspects and fills PDF text and checkbox fields", async () => {
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([612, 792]);
+    const form = doc.getForm();
+    form.createTextField("applicant.name").addToPage(page);
+    form.createCheckBox("applicant.confirmed").addToPage(page);
+    const original = await doc.save();
+    const fields = await listPdfFormFields(original);
+    expect(fields.map(field => [field.name, field.type])).toEqual([
+      ["applicant.name", "text"],
+      ["applicant.confirmed", "checkbox"]
+    ]);
+    const filled = await fillPdfForm(original, {
+      "applicant.name": "Abdul",
+      "applicant.confirmed": true
+    });
+    const reopened = await PDFDocument.load(filled);
+    expect(reopened.getForm().getTextField("applicant.name").getText()).toBe("Abdul");
+    expect(reopened.getForm().getCheckBox("applicant.confirmed").isChecked()).toBe(true);
+  });
+
+  it("rejects unknown and incorrectly typed PDF form values", async () => {
+    const doc = await PDFDocument.create();
+    const page = doc.addPage();
+    doc.getForm().createTextField("name").addToPage(page);
+    const original = await doc.save();
+    await expect(fillPdfForm(original, { missing: "value" })).rejects.toThrow(/Unknown PDF form field/);
+    await expect(fillPdfForm(original, { name: true })).rejects.toThrow(/requires a string/);
+  });
+
 });
