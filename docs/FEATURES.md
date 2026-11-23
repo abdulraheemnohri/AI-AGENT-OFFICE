@@ -16,7 +16,7 @@
 - ODT text import/export with editable paragraphs and heading levels. Complex styles, images, tables and page layout are not fully preserved.
 
 ## Sheets and presentations
-- CSV import/export, quoted fields, multiline values, cell editing, row/column extension and basic formula engine (arithmetic, references, ranges, aggregates and additional numeric functions).
+- CSV import/export, quoted fields, multiline values, cell editing, row/column extension and basic formula engine supporting arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX, COUNT, PRODUCT, MEDIAN, ABS, SQRT, POWER, MOD, ROUND, ROUNDUP and ROUNDDOWN.
 - Multi-worksheet XLSX and ODS import/export with worksheet tabs, add/delete/rename controls, formula preservation, safe unique XLSX worksheet names, a 50 MB XLSX import cap and a 50-sheet workspace cap. ODS import is bounded to 200,000 cells and 100 sheets. Workbook backups and autosave preserve all worksheets. Cell formatting, charts, pivot tables, macros and advanced OpenFormula compatibility are not preserved.
 - Slide outline editing, slide move up/down, duplicate and delete.
 - PPTX and ODP import/export for slide titles and body text. Exported ODP slides use a basic editable text layout; visual fidelity, media, transitions and speaker-note preservation are not implemented.
@@ -45,7 +45,7 @@
 
 ## Not implemented / next milestones
 - Full-fidelity DOCX/ODT/RTF editor, OpenDocument formatting and full layout/media round-trip.
-- Advanced spreadsheet formulas, charts, pivot tables, workbook styling and formula compatibility beyond the built-in arithmetic/aggregate subset.
+- Advanced spreadsheet formulas, charts, pivot tables, workbook styling and formula compatibility beyond the built-in arithmetic, reference, aggregate and numeric-function subset.
 - Visual PowerPoint canvas, full PPTX import fidelity and animation/media editing.
 - PDF OCR, native comment annotations, certificate-based signatures, secure redaction and page thumbnails.
 - Built-in offline speech, vision, document RAG, embeddings and model manager with download/checksum/unload.
