@@ -147,7 +147,9 @@ export async function exportPptx(slides: { title: string; body: string }[]): Pro
 
 
 function decodeXmlText(value: string): string {
-  return value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+  return value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)));
 }
 
 export async function importPptx(bytes: ArrayBuffer): Promise<{ title: string; body: string }[]> {
