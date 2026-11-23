@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
-import { exportDocx, exportPptx, exportXlsx, exportOdt, importOdt, importRtf, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage, importXlsxWorkbook, exportXlsxWorkbook, importOdsWorkbook, exportOdsWorkbook, importOdp, exportOdp } from "../src/lib/formats";
+import { exportDocx, exportPptx, exportXlsx, exportOdt, importOdt, importRtf, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage, highlightPdfArea, addPdfNote, importXlsxWorkbook, exportXlsxWorkbook, importOdsWorkbook, exportOdsWorkbook, importOdp, exportOdp } from "../src/lib/formats";
 
 describe("Office format engines", () => {
   it("exports and imports a basic DOCX as editable text", async () => {
@@ -94,6 +94,18 @@ describe("Office format engines", () => {
     expect(await pdfPageCount(stamped)).toBe(3);
     const deleted = await deletePdfPage(stamped, 2);
     expect(await pdfPageCount(deleted)).toBe(2);
+  });
+
+  it("adds bounded flattened highlights and note boxes to PDF pages", async () => {
+    const source = await PDFDocument.create();
+    source.addPage([600, 800]);
+    const bytes = await source.save();
+    const highlighted = await highlightPdfArea(bytes, 1, 10, 10, 30, 15);
+    expect(await pdfPageCount(highlighted)).toBe(1);
+    const noted = await addPdfNote(highlighted, 1, 10, 10, 35, 20, "Review this area");
+    expect(await pdfPageCount(noted)).toBe(1);
+    await expect(highlightPdfArea(bytes, 1, 90, 90, 20, 20)).rejects.toThrow(/inside the page/);
+    await expect(addPdfNote(bytes, 1, 10, 10, 2, 2, "Too small")).rejects.toThrow(/too small/);
   });
 
   it("round-trips editable ODT paragraphs and headings", async () => {
