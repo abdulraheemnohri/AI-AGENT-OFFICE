@@ -149,4 +149,23 @@ describe("Office format engines", () => {
     expect(slides[0].body).toContain("Isolate first");
   });
 
+
+  it("adds a bounded translucent PDF highlight overlay", async () => {
+    const source = await PDFDocument.create();
+    source.addPage([612, 792]);
+    const bytes = await source.save();
+    const highlighted = await highlightPdfArea(bytes, 1, { x: 40, y: 50, width: 120, height: 24 }, "green");
+    expect(await pdfPageCount(highlighted)).toBe(1);
+    const reopened = await PDFDocument.load(highlighted);
+    expect(reopened.getPage(0).getSize().width).toBe(612);
+  });
+
+  it("rejects highlight rectangles outside the page", async () => {
+    const source = await PDFDocument.create();
+    source.addPage([100, 100]);
+    const bytes = await source.save();
+    await expect(highlightPdfArea(bytes, 1, { x: 90, y: 90, width: 20, height: 20 })).rejects.toThrow(/fit inside/);
+    await expect(highlightPdfArea(bytes, 2, { x: 1, y: 1, width: 10, height: 10 })).rejects.toThrow(/page number/);
+  });
+
 });
