@@ -29,3 +29,21 @@ describe("spreadsheet formula engine", () => {
     expect(evaluateWorkbook([["=POWER(2,3)","=1+"]])[0]).toEqual(["#ERROR!","#ERROR!"]);
   });
 });
+
+describe("spreadsheet sorting and filtering", () => {
+  it("sorts by numeric or text values, keeps blanks last and preserves stable ties", async () => {
+    const { sortWorkbookRows } = await import("../src/lib/spreadsheet");
+    expect(sortWorkbookRows([["Name","Score"],["A","10"],["B","2"],["C",""],["D","2"]],1,"ascending",true))
+      .toEqual([["Name","Score"],["B","2"],["D","2"],["A","10"],["C",""]]);
+    expect(sortWorkbookRows([["A"],["c"],["a"],["b"]],0,"descending"))
+      .toEqual([["c"],["b"],["A"],["a"]]);
+  });
+  it("filters by raw or calculated cell text and returns original row indexes", async () => {
+    const { filterWorkbookRowIndexes } = await import("../src/lib/spreadsheet");
+    const raw = [["Item","Formula"],["Lamp","=2+2"],["Fan","=3+3"],["Lamp shade",""]];
+    const calculated = [["Item","Formula"],["Lamp",4],["Fan",6],["Lamp shade",""]];
+    expect(filterWorkbookRowIndexes(raw,"lamp",calculated)).toEqual([1,3]);
+    expect(filterWorkbookRowIndexes(raw,"6",calculated)).toEqual([2]);
+    expect(filterWorkbookRowIndexes(raw,"")).toEqual([0,1,2,3]);
+  });
+});
