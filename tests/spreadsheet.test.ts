@@ -37,6 +37,8 @@ describe("spreadsheet sorting and filtering", () => {
       .toEqual([["Name","Score"],["B","2"],["D","2"],["A","10"],["C",""]]);
     expect(sortWorkbookRows([["A"],["c"],["a"],["b"]],0,"descending"))
       .toEqual([["c"],["b"],["A"],["a"]]);
+    expect(sortWorkbookRows([["Item","=2"],["A","=10"],["B","=3"]],1,"ascending",true,[["Item",2],["A",10],["B",3]]))
+      .toEqual([["Item","=2"],["B","=3"],["A","=10"]]);
   });
   it("filters by raw or calculated cell text and returns original row indexes", async () => {
     const { filterWorkbookRowIndexes } = await import("../src/lib/spreadsheet");
