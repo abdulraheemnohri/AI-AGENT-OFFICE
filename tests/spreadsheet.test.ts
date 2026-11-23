@@ -49,3 +49,19 @@ describe("spreadsheet sorting and filtering", () => {
     expect(filterWorkbookRowIndexes(raw,"")).toEqual([0,1,2,3]);
   });
 });
+
+describe("spreadsheet row and column editing", () => {
+  it("inserts and deletes rows at selected positions without mutating input", async () => {
+    const { insertWorkbookRow, deleteWorkbookRow } = await import("../src/lib/spreadsheet");
+    const source = [["a","b"],["c","d"]];
+    expect(insertWorkbookRow(source,1)).toEqual([["a","b"],["",""],["c","d"]]);
+    expect(deleteWorkbookRow(source,0)).toEqual([["c","d"]]);
+    expect(source).toEqual([["a","b"],["c","d"]]);
+    expect(deleteWorkbookRow([["only"]],0)).toEqual([[""]]);
+  });
+  it("inserts and deletes columns across all rows", async () => {
+    const { insertWorkbookColumn, deleteWorkbookColumn } = await import("../src/lib/spreadsheet");
+    expect(insertWorkbookColumn([["a","b"],["c"]],1)).toEqual([["a","","b"],["c",""]]);
+    expect(deleteWorkbookColumn([["a","b"],["c","d"]],0)).toEqual([["b"],["d"]]);
+  });
+});
