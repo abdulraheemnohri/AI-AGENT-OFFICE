@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { columnLabel, evaluateWorkbook } from "./lib/spreadsheet";\nimport { parseCsv, stringifyCsv } from "./lib/csv";
+import { columnLabel, evaluateWorkbook } from "./lib/spreadsheet";
+import { parseCsv, stringifyCsv } from "./lib/csv";
 import { BrainCircuit, Home, FileText, Sheet, Presentation, FileDown, Bot, Cpu, Settings, FolderOpen, FilePlus2, ShieldCheck, Save, Eye, Edit3, Search, Download, Plus, Trash2, Play, CheckCircle2, ChevronRight, HardDrive, Sparkles } from "lucide-react";
 
 type Page = "Home" | "Writer" | "Sheets" | "Slides" | "PDF Studio" | "AI Agent" | "Models & Runtimes" | "Settings";
