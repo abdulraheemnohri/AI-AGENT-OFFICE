@@ -20,6 +20,13 @@ describe("workspace backup", () => {
     expect(() => parseBackup(JSON.stringify({ ...createBackup(data), schemaVersion: 9 }))).toThrow(/Unsupported/);
     expect(() => parseBackup(JSON.stringify({ ...createBackup(data), data: { ...data, workbook: { name: "bad", cells: [1] } } }))).toThrow(/workbook/);
   });
+  it("round-trips a small PDF payload and rejects invalid PDF backup data", () => {
+    const backup = createBackup({ ...data, pdf: { name: "sample.pdf", base64: "JVBERi0=" } });
+    expect(parseBackup(JSON.stringify(backup)).data.pdf).toEqual({ name: "sample.pdf", base64: "JVBERi0=" });
+    const invalid = { ...backup, data: { ...backup.data, pdf: { name: "bad.pdf", base64: "not base64!" } } };
+    expect(() => parseBackup(JSON.stringify(invalid))).toThrow(/PDF section/);
+  });
+
   it("rejects oversized backups", () => {
     expect(() => parseBackup(" ".repeat(20 * 1024 * 1024 + 1))).toThrow(/20 MB/);
   });
