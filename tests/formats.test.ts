@@ -95,4 +95,25 @@ describe("Office format engines", () => {
     const deleted = await deletePdfPage(stamped, 2);
     expect(await pdfPageCount(deleted)).toBe(2);
   });
+
+  it("round-trips editable ODT paragraphs and headings", async () => {
+    const blob = await exportOdt("# Annual report\n\nLocal document\n- First item");
+    expect(blob.type).toBe("application/vnd.oasis.opendocument.text");
+    const text = await importOdt(await blob.arrayBuffer());
+    expect(text).toContain("Annual report");
+    expect(text).toContain("Local document");
+    expect(text).toContain("• First item");
+  });
+
+  it("imports common RTF paragraphs, escaped characters and Unicode", () => {
+    const text = importRtf("{\\rtf1\\ansi Hello \\b bold\\b0\\par Next \\{safe\\} \\u8217?}");
+    expect(text).toContain("Hello bold");
+    expect(text).toContain("Next {safe}");
+    expect(text).toContain("’");
+  });
+
+  it("rejects malformed RTF input", () => {
+    expect(() => importRtf("not an RTF file")).toThrow();
+  });
+
 });
