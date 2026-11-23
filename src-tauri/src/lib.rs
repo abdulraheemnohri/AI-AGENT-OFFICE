@@ -82,7 +82,7 @@ async fn litert_status() -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn litert_generate(model_path: String, prompt: String, backend: String, enable_thinking: bool, thinking_budget: u32, max_output_tokens: u32) -> Result<String, String> {
+async fn litert_generate(model_path: String, prompt: String, backend: String, enable_thinking: bool, thinking_budget: u32, max_output_tokens: u32, enable_mtp: bool) -> Result<String, String> {
     if prompt.trim().is_empty() || prompt.len() > 30000 { return Err("Prompt must contain 1 to 30,000 bytes".into()); }
     if !matches!(backend.as_str(), "CPU" | "GPU" | "NPU") { return Err("Backend must be CPU, GPU or NPU".into()); }
     if thinking_budget > 8192 || max_output_tokens == 0 || max_output_tokens > 8192 {
@@ -100,14 +100,15 @@ model_path, prompt, backend_name = sys.argv[1], sys.argv[2], sys.argv[3]
 enable_thinking = sys.argv[4].lower() == "true"
 thinking_budget = int(sys.argv[5])
 max_output_tokens = int(sys.argv[6])
+enable_mtp = sys.argv[7].lower() == "true"
 backend = getattr(litert_lm.Backend, backend_name)()
 thinking = litert_lm.ThinkingConfig(enable_thinking=enable_thinking, thinking_token_budget=thinking_budget)
-with litert_lm.Engine(model_path, backend=backend) as engine:
+with litert_lm.Engine(model_path, backend=backend, enable_speculative_decoding=enable_mtp) as engine:
     with engine.create_conversation(thinking_config=thinking, max_output_tokens=max_output_tokens) as conversation:
         result = conversation.send_message(prompt)
         print(result["content"][0]["text"])
 "#;
-    let args = vec![model_path, prompt, backend, enable_thinking.to_string(), thinking_budget.to_string(), max_output_tokens.to_string()];
+    let args = vec![model_path, prompt, backend, enable_thinking.to_string(), thinking_budget.to_string(), max_output_tokens.to_string(), enable_mtp.to_string()];
     tauri::async_runtime::spawn_blocking(move || run_litert_python(code, &args)).await.map_err(|e| e.to_string())?
 }
 
