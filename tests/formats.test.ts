@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
-import { exportDocx, exportPptx, exportXlsx, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage } from "../src/lib/formats";
+import { exportDocx, exportPptx, exportXlsx, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage } from "../src/lib/formats";
 
 describe("Office format engines", () => {
   it("exports and imports a basic DOCX as editable text", async () => {
@@ -32,7 +32,28 @@ describe("Office format engines", () => {
     expect(blob.type).toContain("presentation");
   });
 
-  it("imports the generated PPTX slide titles and body text", async () => {\n    const blob = await exportPptx([{ title: "Title slide", body: "Body text" }, { title: "Second", body: "More text" }]);\n    const slides = await importPptx(await blob.arrayBuffer());\n    expect(slides).toHaveLength(2);\n    expect(slides[0].title).toBe("Title slide");\n    expect(slides[0].body).toContain("Body text");\n  });\n\n  it("reorders, duplicates and inserts blank PDF pages", async () => {\n    const doc = await PDFDocument.create();\n    doc.addPage([300, 400]); doc.addPage([400, 300]); doc.addPage([200, 200]);\n    const bytes = await doc.save();\n    const reordered = await reorderPdfPages(bytes, [3, 1, 2]);\n    expect(await pdfPageCount(reordered)).toBe(3);\n    const duplicated = await duplicatePdfPage(reordered, 2);\n    expect(await pdfPageCount(duplicated)).toBe(4);\n    const inserted = await insertBlankPdfPage(duplicated, 1);\n    expect(await pdfPageCount(inserted)).toBe(5);\n    await expect(reorderPdfPages(bytes, [1, 1, 3])).rejects.toThrow();\n  });\n\n  it("merges, extracts, rotates, stamps and deletes PDF pages", async () => {
+  it("imports the generated PPTX slide titles and body text", async () => {
+    const blob = await exportPptx([{ title: "Title slide", body: "Body text" }, { title: "Second", body: "More text" }]);
+    const slides = await importPptx(await blob.arrayBuffer());
+    expect(slides).toHaveLength(2);
+    expect(slides[0].title).toBe("Title slide");
+    expect(slides[0].body).toContain("Body text");
+  });
+
+  it("reorders, duplicates and inserts blank PDF pages", async () => {
+    const doc = await PDFDocument.create();
+    doc.addPage([300, 400]); doc.addPage([400, 300]); doc.addPage([200, 200]);
+    const bytes = await doc.save();
+    const reordered = await reorderPdfPages(bytes, [3, 1, 2]);
+    expect(await pdfPageCount(reordered)).toBe(3);
+    const duplicated = await duplicatePdfPage(reordered, 2);
+    expect(await pdfPageCount(duplicated)).toBe(4);
+    const inserted = await insertBlankPdfPage(duplicated, 1);
+    expect(await pdfPageCount(inserted)).toBe(5);
+    await expect(reorderPdfPages(bytes, [1, 1, 3])).rejects.toThrow();
+  });
+
+  it("merges, extracts, rotates, stamps and deletes PDF pages", async () => {
     const source = await PDFDocument.create();
     source.addPage([300, 400]);
     source.addPage([400, 300]);
