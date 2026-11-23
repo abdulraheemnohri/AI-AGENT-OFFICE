@@ -8,7 +8,8 @@ export type WorkspaceBackup = {
     slides: { title: string; body: string }[];
     tasks: { id: number; title: string; done: boolean }[];
     preferences: Record<string, unknown>;
-    recovery: unknown;\n    pdf?: { name: string; base64: string } | null;
+    recovery: unknown;
+    pdf?: { name: string; base64: string } | null;
   };
 };
 
@@ -29,6 +30,7 @@ export function parseBackup(raw: string): WorkspaceBackup {
   if (!d.workbook || typeof d.workbook.name !== "string" || !Array.isArray(d.workbook.cells) || !d.workbook.cells.every(row => Array.isArray(row) && row.every(cell => typeof cell === "string"))) throw new Error("Backup workbook section is invalid");
   if (!Array.isArray(d.slides) || !d.slides.every(s => s && typeof s.title === "string" && typeof s.body === "string")) throw new Error("Backup slides section is invalid");
   if (!Array.isArray(d.tasks) || !d.tasks.every(t => t && typeof t.id === "number" && typeof t.title === "string" && typeof t.done === "boolean")) throw new Error("Backup tasks section is invalid");
-  if (!d.preferences || typeof d.preferences !== "object") throw new Error("Backup preferences section is invalid");\n  if (d.pdf != null && (typeof d.pdf !== "object" || typeof d.pdf.name !== "string" || typeof d.pdf.base64 !== "string" || d.pdf.base64.length > 17 * 1024 * 1024 || !/^[A-Za-z0-9+/]*={0,2}$/.test(d.pdf.base64))) throw new Error("Backup PDF section is invalid or too large");
+  if (!d.preferences || typeof d.preferences !== "object") throw new Error("Backup preferences section is invalid");
+  if (d.pdf != null && (typeof d.pdf !== "object" || typeof d.pdf.name !== "string" || typeof d.pdf.base64 !== "string" || d.pdf.base64.length > 17 * 1024 * 1024 || !/^[A-Za-z0-9+/]*={0,2}$/.test(d.pdf.base64))) throw new Error("Backup PDF section is invalid or too large");
   return value as WorkspaceBackup;
 }
