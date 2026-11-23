@@ -292,7 +292,9 @@ export function exportXlsxWorkbook(sheets: XlsxWorksheet[]): Blob {
   const workbook = XLSX.utils.book_new();
   const used = new Set<string>();
   for (const item of sheets) {
-    const base = (item.name.trim() || "Sheet").replace(/[\\\\/?*\\[\\]:]/g, " ").slice(0, 31) || "Sheet";
+    const rawName = item.name.trim() || "Sheet";
+    const forbidden = new Set([":", "\\", "/", "?", "*", "[", "]"]);
+    const base = [...rawName].map(character => forbidden.has(character) ? " " : character).join("").trim().slice(0, 31) || "Sheet";
     let name = base;
     let suffix = 2;
     while (used.has(name.toLowerCase())) {
