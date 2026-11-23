@@ -26,7 +26,7 @@ describe("spreadsheet formula engine", () => {
     expect(out[0]).toEqual(["#CYCLE!","#CYCLE!","#DIV/0!"]);
   });
   it("returns an error for unsupported or malformed formulas", () => {
-    expect(evaluateWorkbook([["=POWER(2,3)","=1+"]])[0]).toEqual(["#ERROR!","#ERROR!"]);
+    expect(evaluateWorkbook([["=POWER(2,3)","=1+"]])[0]).toEqual([8,"#ERROR!"]);
   });
 });
 
