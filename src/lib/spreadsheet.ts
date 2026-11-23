@@ -142,3 +142,31 @@ export function filterWorkbookRowIndexes(workbook: Workbook, query: string, calc
     return values.some(value => String(value ?? "").toLocaleLowerCase().includes(needle)) ? [index] : [];
   });
 }
+
+/** Insert an empty row at a zero-based position, clamped to the workbook bounds. */
+export function insertWorkbookRow(workbook: Workbook, index: number): Workbook {
+  const at = Math.max(0, Math.min(workbook.length, Math.trunc(index)));
+  const width = Math.max(1, ...workbook.map(row => row.length));
+  const next = workbook.map(row => [...row]);
+  next.splice(at, 0, Array(width).fill(""));
+  return next;
+}
+
+/** Delete a row by zero-based position. Keeps one empty row when deleting the final row. */
+export function deleteWorkbookRow(workbook: Workbook, index: number): Workbook {
+  if (!Number.isInteger(index) || index < 0 || index >= workbook.length) return workbook.map(row => [...row]);
+  const next = workbook.filter((_, row) => row !== index).map(row => [...row]);
+  return next.length ? next : [Array(Math.max(1, workbook[0]?.length ?? 1)).fill("")];
+}
+
+/** Insert an empty cell into every row at a zero-based column position. */
+export function insertWorkbookColumn(workbook: Workbook, index: number): Workbook {
+  const at = Math.max(0, Math.min(Math.max(1, ...workbook.map(row => row.length)), Math.trunc(index)));
+  return workbook.map(row => { const next = [...row]; next.splice(at, 0, ""); return next; });
+}
+
+/** Delete a column by zero-based position. Keeps one column in each row. */
+export function deleteWorkbookColumn(workbook: Workbook, index: number): Workbook {
+  if (!Number.isInteger(index) || index < 0) return workbook.map(row => [...row]);
+  return workbook.map(row => { const next = [...row]; if (index < next.length) next.splice(index, 1); return next.length ? next : [""]; });
+}
