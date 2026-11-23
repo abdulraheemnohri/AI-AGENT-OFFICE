@@ -32,11 +32,11 @@ export default function App() {
   useEffect(()=>{try{const r=JSON.parse(localStorage.getItem("aao.recovery")||"null");if(r?.doc && !file && doc.startsWith("# Untitled")){setDoc(r.doc);setFile(r.file||"");setPath(r.path||"");}}catch{}},[]);
   const words=useMemo(()=>countWords(doc),[doc]);\n  const calculatedGrid=useMemo(()=>evaluateWorkbook(grid),[grid]);\n  const formulaCount=useMemo(()=>grid.flat().filter(v=>v.startsWith("=")).length,[grid]);
   async function openFile(){setBusy(true);try{const d=await invoke<Opened|null>("open_document");if(!d)return;setDoc(d.content);setFile(d.name);setPath(d.path);setPage("Writer");setPreview(false);setNotice("Opened "+d.name);}catch(e){setNotice(String(e));}finally{setBusy(false);}}
-  async function saveContent(content:string,name:string){setBusy(true);try{const result=await invoke<string|null>("save_document",{path:path||null,content});if(result){setPath(result);setFile(result.split(/[\\/]/).pop()||name);setNotice("Saved successfully");}}catch(e){setNotice(String(e));}finally{setBusy(false);}}
+  async function saveContent(content:string,name:string,forceDialog=false){setBusy(true);try{const result=await invoke<string|null>("save_document",{path:forceDialog?null:(path||null),content});if(result){setPath(result);setFile(result.split(/[\\/]/).pop()||name);setNotice("Saved successfully");}}catch(e){setNotice(String(e));}finally{setBusy(false);}}
   function newDocument(){setDoc("# Untitled document\n\n");setFile("");setPath("");setPage("Writer");setPreview(false);setNotice("New document");}
   function updateCell(r:number,c:number,v:string){setGrid(old=>old.map((row,i)=>i===r?row.map((x,j)=>j===c?v:x):row));}
   async function openCsv(){setBusy(true);try{const d=await invoke<Opened|null>("open_document");if(!d)return;setGrid(csvParse(d.content));setSheetName(d.name);setPath("");setNotice("Imported "+d.name+"; export will use Save As.");}catch(e){setNotice(String(e));}finally{setBusy(false);}}
-  async function saveCsv(){await saveContent(csvString(grid),sheetName+".csv");}
+  async function saveCsv(){await saveContent(csvString(grid),sheetName+".csv",true);}
   function addTask(){if(!task.trim())return;setTasks(t=>[...t,{id:Date.now(),title:task.trim(),done:false}]);setTask("");}
   function makePlan(){const raw=task.trim();if(!raw)return;const steps=["Clarify the requested outcome and identify the files involved","Create a safe, reversible execution plan","Review each proposed change before applying it","Run checks and report the result"];setTasks(t=>[...t,...steps.map((title,i)=>({id:Date.now()+i,title:raw+": "+title,done:false}))]);setTask("");setNotice("Created a local checklist. No AI model or system actions were run.");}
   const nav=(p:Page)=>{setPage(p);setNotice(p+" workspace");};
