@@ -702,3 +702,50 @@ export async function highlightPdfArea(
   });
   return doc.save();
 }
+
+
+export type PdfFormFieldInfo = {
+  name: string;
+  type: "text" | "checkbox" | "dropdown" | "radio" | "option-list" | "unsupported";
+  options?: string[];
+};
+
+/** Inspect AcroForm fields without executing document scripts. */
+export async function inspectPdfForm(bytes: Uint8Array): Promise<PdfFormFieldInfo[]> {
+  const doc = await PDFDocument.load(bytes);
+  const form = doc.getForm();
+  return form.getFields().map((field) => {
+    const name = field.getName();
+    if (field instanceof PDFTextField) return { name, type: "text" };
+    if (field instanceof PDFCheckBox) return { name, type: "checkbox" };
+    if (field instanceof PDFDropdown) return { name, type: "dropdown", options: field.getOptions() };
+    if (field instanceof PDFRadioGroup) return { name, type: "radio", options: field.getOptions() };
+    if (field instanceof PDFOptionList) return { name, type: "option-list", options: field.getOptions() };
+    return { name, type: "unsupported" };
+  });
+}
+
+/** Fill text and checkbox fields only; choice fields are intentionally read-only for now. */
+export async function fillPdfForm(
+  bytes: Uint8Array,
+  values: Record<string, string | boolean>
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes);
+  const form = doc.getForm();
+  const fields = new Map(form.getFields().map((field) => [field.getName(), field]));
+  for (const [name, value] of Object.entries(values)) {
+    const field = fields.get(name);
+    if (!field) throw new Error("Unknown PDF form field: " + name);
+    if (field instanceof PDFTextField) {
+      if (typeof value !== "string") throw new Error("Text field requires a string: " + name);
+      if (value.length > 10000) throw new Error("Text field value is too long: " + name);
+      field.setText(value);
+    } else if (field instanceof PDFCheckBox) {
+      if (typeof value !== "boolean") throw new Error("Checkbox field requires true or false: " + name);
+      value ? field.check() : field.uncheck();
+    } else {
+      throw new Error("Only text and checkbox fields can be edited currently: " + name);
+    }
+  }
+  return doc.save();
+}
