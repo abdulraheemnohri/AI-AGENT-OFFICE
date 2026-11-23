@@ -403,7 +403,7 @@ export async function exportOdt(markdown: string): Promise<Blob> {
 export type OdsWorksheet = { name: string; cells: string[][] };
 
 function repeatedCount(attributes: string, name: string, max: number): number {
-  const value = Number(attributes.match(new RegExp(name + '="(\\\\d+)"'))?.[1] || 1);
+  const value = Number(attributes.match(new RegExp(name + '="(\\d+)"'))?.[1] || 1);
   return Number.isFinite(value) ? Math.max(1, Math.min(max, value)) : 1;
 }
 
