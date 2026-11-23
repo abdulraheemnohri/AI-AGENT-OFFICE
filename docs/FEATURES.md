@@ -54,3 +54,4 @@
 - Enforced network isolation, scheduled backups, portable runtime/model installer validation and signed production releases.\n- Password-protected workspace backup export/import is implemented using PBKDF2-SHA256 (310,000 iterations) and authenticated AES-256-GCM. Passwords are entered per operation and never persisted. Encrypted restore authenticates/decrypts first, then validates the normal versioned workspace schema before applying it.
 
 All document conversion and editing described above is performed locally in the app. Features are only considered complete when implementation and automated tests are present; Windows hardware/installer validation remains separate.
+- Per-column dropdown data validation with persisted allowed-value lists, in-cell suggestions, invalid-value rejection and formula/blank exemptions.
