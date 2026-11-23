@@ -7,13 +7,13 @@ Offline-first Windows desktop productivity workspace built with Tauri 2, React, 
 ## Working features in this branch
 - Dashboard and navigation across Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes and Settings.
 - Writer for UTF-8 plain text and Markdown, with edit/preview, word and character counts, find/replace-all, native open/save and optional local recovery snapshot.
-- CSV spreadsheet grid with quoted CSV import, cell editing, row extension, CSV export and an initial local formula engine (arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX and COUNT).
+- CSV spreadsheet grid with validated quoted/multiline CSV import/export, cell editing, row/column add/delete, duplicate rows, clear-sheet confirmation, and a local formula engine (arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX and COUNT).
 - Presentation outline editor with slide add/delete/edit and Markdown outline export.
 - Local task checklist and safe-plan template (deterministic; no AI inference or system command execution).
 - Locally persisted UI preferences: theme, editor font size, autosave recovery, offline preference and telemetry preference.
 
 ## Not yet implemented
-Native DOCX/ODT/RTF, XLSX/XLS/ODS, PPTX/PPT/ODP and PDF engines; spreadsheet formulas/charts; PDF rendering/OCR; local model inference and runtime adapters; model downloads; agent tool execution and workflow automation. Settings such as offline-only and telemetry are preferences only and do not enforce network isolation. No installer has been built or verified by this repository update.
+Native DOCX/ODT/RTF, XLSX/XLS/ODS, PPTX/PPT/ODP and PDF engines; advanced spreadsheet formulas/charts; PDF rendering/OCR; local model inference and runtime adapters; model downloads; agent tool execution and workflow automation. Settings such as offline-only and telemetry are preferences only and do not enforce network isolation. No installer has been built or verified by this repository update.
 
 ## Windows requirements
 - Windows 10/11 x64
