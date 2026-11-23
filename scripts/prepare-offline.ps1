@@ -31,4 +31,5 @@ AI Agent Office offline runtime payload
 Run scripts\install-offline.ps1 from the project folder after installing AI Agent Office.
 This payload is platform/Python-version specific; prepare it on Windows for the target architecture.
 "@ | Set-Content (Join-Path $bundle "OFFLINE-README.txt") -Encoding UTF8
+Copy-Item (Join-Path $PSScriptRoot "install-offline.ps1") (Join-Path $bundle "Install-LiteRTLM-Offline.ps1") -Force
 Write-Host "Offline payload prepared at $bundle"
