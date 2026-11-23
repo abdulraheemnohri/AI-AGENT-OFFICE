@@ -9,13 +9,13 @@ Offline-first Windows desktop productivity workspace built with Tauri 2, React, 
 - Writer for UTF-8 plain text and Markdown, with edit/preview, word and character counts, find/replace-all, native open/save, DOCX text import, basic DOCX and RTF export, and full-workspace autosave recovery.
 - Spreadsheet grid with CSV import/export, first-worksheet XLSX import/export, cell editing, row/column controls and local formulas (arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX and COUNT).
 - Presentation outline editor with slide add/delete/edit/reorder/duplicate, Markdown outline export, basic PPTX text import and editable PPTX title/body slide export.
-- Local task checklist and safe-plan template (deterministic; no AI inference or system command execution).
+- Local task checklist with deterministic safe-plan generation and optional LiteRT-LM-generated task proposals. Proposed steps are not executed automatically.
 - Locally persisted UI preferences: dark/light/system theme, compact/comfortable density, font size, spell-check toggle/language, autosave delay/recovery, overwrite confirmation, offline preference and print page layout.
 - Windows print integration through the WebView print dialog for installed local/network printers and Windows PDF printers.
 - Windows removable USB storage detection and guarded document/CSV/full-workspace backup export to detected removable drives.
 - PC file import/export for text/Markdown, DOCX text, CSV, first-sheet XLSX and PPTX title/body slides.
 - Versioned full-workspace JSON backup/restore and full-workspace autosave recovery covering document, workbook, slides, tasks, preferences, model settings/history and recovery snapshot.
-- Google LiteRT-LM Python API bridge for local .litertlm inference with CPU/GPU selection, model picker, prompt UI and persistent local chat history.
+- Google LiteRT-LM Python API bridge for local .litertlm inference with CPU/GPU/NPU selection (NPU experimental), reasoning controls, token budgets, model picker, prompt UI and persistent local chat history.
 - Windows offline dependency-wheel preparation, offline LiteRT-LM installation and installer packaging scripts.
 
 ## Not yet implemented
