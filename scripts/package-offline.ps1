@@ -1,10 +1,11 @@
 param(
   [string]$ModelPath = "",
-  [string]$PythonInstallerPath = ""
+  [string]$PythonInstallerPath = "",
+  [string]$WebView2InstallerPath = ""
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
-& (Join-Path $PSScriptRoot "prepare-offline.ps1") -ModelPath $ModelPath -PythonInstallerPath $PythonInstallerPath
+& (Join-Path $PSScriptRoot "prepare-offline.ps1") -ModelPath $ModelPath -PythonInstallerPath $PythonInstallerPath -WebView2InstallerPath $WebView2InstallerPath
 if ($LASTEXITCODE -ne 0) { throw "Offline runtime preparation failed" }
 Push-Location $root
 try {
@@ -21,4 +22,5 @@ $installers | Copy-Item -Destination $dist -Force
 $zip = Join-Path $root "AI-Agent-Office-Offline-Windows.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path (Join-Path $bundle "*") -DestinationPath $zip -CompressionLevel Optimal
+Copy-Item (Join-Path $PSScriptRoot "Install-AI-Agent-Office-Offline.ps1") (Join-Path $bundle "Install-AI-Agent-Office-Offline.ps1") -Force
 Write-Host "Offline distribution created: $zip"
