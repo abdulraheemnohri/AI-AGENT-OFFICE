@@ -30,7 +30,8 @@ export default function App() {
   useEffect(()=>{localStorage.setItem("aao.grid",JSON.stringify(grid));},[grid]);
   useEffect(()=>{localStorage.setItem("aao.sheetName",JSON.stringify(sheetName));},[sheetName]);
   useEffect(()=>{localStorage.setItem("aao.slides",JSON.stringify(slides));},[slides]);
-  useEffect(()=>{localStorage.setItem("aao.tasks",JSON.stringify(tasks));},[tasks]);\n  useEffect(()=>{localStorage.setItem("aao.litertlm.modelPath",modelPath);localStorage.setItem("aao.litertlm.backend",modelBackend);},[modelPath,modelBackend]);
+  useEffect(()=>{localStorage.setItem("aao.tasks",JSON.stringify(tasks));},[tasks]);
+  useEffect(()=>{localStorage.setItem("aao.litertlm.modelPath",modelPath);localStorage.setItem("aao.litertlm.backend",modelBackend);},[modelPath,modelBackend]);
   useEffect(()=>{if(!prefs.autosave)return;const id=window.setTimeout(()=>{localStorage.setItem("aao.recovery",JSON.stringify({doc,file,path,at:Date.now()}));},700);return()=>window.clearTimeout(id);},[doc,file,path,prefs.autosave]);
   useEffect(()=>{try{const r=JSON.parse(localStorage.getItem("aao.recovery")||"null");if(r?.doc && !file && doc.startsWith("# Untitled")){setDoc(r.doc);setFile(r.file||"");setPath(r.path||"");}}catch{}},[]);
   const words=useMemo(()=>countWords(doc),[doc]);
