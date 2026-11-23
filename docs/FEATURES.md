@@ -3,6 +3,7 @@
 ## Desktop foundation
 - Windows desktop application shell built with Tauri 2, React and TypeScript.
 - Local dashboard and navigation for Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes, Devices & Printing, Data & Backup and Settings.
+- Adaptive layout for phone screens (320px+), tablets, laptops and wide desktops; mobile navigation becomes horizontally scrollable, content grids reflow, editors/toolbars wrap, and reduced-motion preferences are respected. This is responsive desktop WebView UI, not a separate native Android application.
 - Local browser-profile persistence for workbook cells, slide outlines, task list, model chat history and preferences.
 - Light, dark and system theme; compact/comfortable density; editor font size; spell-check toggle and English/Urdu language hint; default text format.
 - Stored and restored preferences are normalized against an allow-list, numeric limits and known settings; malformed or unknown values fall back safely.
