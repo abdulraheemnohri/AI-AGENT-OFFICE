@@ -13,6 +13,13 @@ if (-not $python) {
 }
 if (-not $python) { throw "Python installation was not found in PATH. Restart PowerShell and run this script again." }
 Write-Host "Installing LiteRT-LM from local wheel files only..."
-& python -m pip install --no-index --find-links $wheels litert-lm-api
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
+$pythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+if (-not $pythonExe) {
+  $pythonRoot = Join-Path $env:LOCALAPPDATA "Programs\Python"
+  $pythonExe = Get-ChildItem $pythonRoot -Filter python.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+}
+if (-not $pythonExe) { throw "Python was installed but python.exe could not be located. Restart Windows and rerun this script." }
+& $pythonExe -m pip install --no-index --find-links $wheels litert-lm-api
 if ($LASTEXITCODE -ne 0) { throw "Offline LiteRT-LM installation failed" }
 Write-Host "LiteRT-LM installed. Open AI Agent Office > Models & Runtimes > Check runtime."
