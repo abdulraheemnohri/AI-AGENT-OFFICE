@@ -1,7 +1,7 @@
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 import * as XLSX from "xlsx";
 import PptxGenJS from "pptxgenjs";
-import { PDFDocument, degrees } from "pdf-lib";
+import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 import JSZip from "jszip";
 
 function docxParagraphText(xml: string): string {
@@ -222,6 +222,48 @@ export async function stampPdfPage(bytes: Uint8Array, pageNumber: number, text: 
   if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > doc.getPageCount()) throw new Error("Invalid PDF page number");
   const page = doc.getPage(pageNumber - 1);
   page.drawText(text, { x: 48, y: 36, size: 11, opacity: 0.8 });
+  return doc.save();
+}
+
+
+
+function pdfAnnotationRect(page: ReturnType<PDFDocument["getPage"]>, xPct: number, yPct: number, widthPct: number, heightPct: number) {
+  for (const [name, value] of [["x", xPct], ["y", yPct], ["width", widthPct], ["height", heightPct]] as const) {
+    if (!Number.isFinite(value) || value < 0 || value > 100) throw new Error(name + " must be between 0 and 100 percent");
+  }
+  if (widthPct <= 0 || heightPct <= 0 || xPct + widthPct > 100 || yPct + heightPct > 100) {
+    throw new Error("Annotation rectangle must have a positive size and remain inside the page");
+  }
+  const size = page.getSize();
+  return {
+    x: size.width * xPct / 100,
+    y: size.height * (100 - yPct - heightPct) / 100,
+    width: size.width * widthPct / 100,
+    height: size.height * heightPct / 100
+  };
+}
+
+/** Adds a flattened translucent highlight rectangle using page-relative percentages. */
+export async function highlightPdfArea(bytes: Uint8Array, pageNumber: number, x: number, y: number, width: number, height: number): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes);
+  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > doc.getPageCount()) throw new Error("Invalid PDF page number");
+  const page = doc.getPage(pageNumber - 1);
+  const rect = pdfAnnotationRect(page, x, y, width, height);
+  page.drawRectangle({ ...rect, color: rgb(1, 0.91, 0.2), opacity: 0.32, borderWidth: 0 });
+  return doc.save();
+}
+
+/** Adds a flattened note box; this is page content, not an editable PDF comment annotation. */
+export async function addPdfNote(bytes: Uint8Array, pageNumber: number, x: number, y: number, width: number, height: number, text: string): Promise<Uint8Array> {
+  if (!text.trim() || text.length > 500) throw new Error("Note must contain 1 to 500 characters");
+  const doc = await PDFDocument.load(bytes);
+  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > doc.getPageCount()) throw new Error("Invalid PDF page number");
+  const page = doc.getPage(pageNumber - 1);
+  const rect = pdfAnnotationRect(page, x, y, width, height);
+  if (rect.width < 40 || rect.height < 24) throw new Error("Note area is too small; use at least 5% page width and 5% page height");
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  page.drawRectangle({ ...rect, color: rgb(1, 0.98, 0.78), borderColor: rgb(0.65, 0.55, 0.2), borderWidth: 0.8, opacity: 0.96 });
+  page.drawText(text, { x: rect.x + 6, y: rect.y + rect.height - 15, size: 9, font, color: rgb(0.16, 0.16, 0.12), maxWidth: rect.width - 12, lineHeight: 11 });
   return doc.save();
 }
 
