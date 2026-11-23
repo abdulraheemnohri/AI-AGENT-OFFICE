@@ -16,7 +16,7 @@ describe("spreadsheet formula engine", () => {
   });
   it("supports additional numeric and statistical functions", () => {
     const out=evaluateWorkbook([["-8","2","3","=ABS(A1)","=SQRT(B1)","=POWER(B1,C1)","=MOD(-7,3)","=PRODUCT(B1:C1)","=MEDIAN(A1:C1)","=ROUND(1.256,2)","=ROUNDUP(1.231,2)","=ROUNDDOWN(-1.239,2)"]]);
-    expect(out[0].slice(3)).toEqual([8,Math.sqrt(2),8,2,6,-8,1.26,1.24,-1.23]);
+    expect(out[0].slice(3)).toEqual([8,Math.sqrt(2),8,2,6,2,1.26,1.24,-1.23]);
   });
   it("returns formula errors for invalid numeric function arguments", () => {
     expect(evaluateWorkbook([["=SQRT(-1)","=ROUND(1,11)","=MOD(1,0)","=ABS(1,2)"]])[0]).toEqual(["#ERROR!","#ERROR!","#DIV/0!","#ERROR!"]);
