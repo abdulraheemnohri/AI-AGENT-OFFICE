@@ -5,6 +5,7 @@
 - Local dashboard and navigation for Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes, Devices & Printing, Data & Backup and Settings.
 - Local browser-profile persistence for workbook cells, slide outlines, task list, model chat history and preferences.
 - Light, dark and system theme; compact/comfortable density; editor font size; spell-check toggle and English/Urdu language hint; default text format.
+- Stored and restored preferences are normalized against an allow-list, numeric limits and known settings; malformed or unknown values fall back safely.
 - Configurable autosave delay and restore confirmation; destructive workspace reset with explicit confirmation.
 
 ## Writer and document formats
