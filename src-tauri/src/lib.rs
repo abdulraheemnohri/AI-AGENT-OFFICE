@@ -82,9 +82,12 @@ async fn litert_status() -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn litert_generate(model_path: String, prompt: String, backend: String) -> Result<String, String> {
+async fn litert_generate(model_path: String, prompt: String, backend: String, enable_thinking: bool, thinking_budget: u32, max_output_tokens: u32) -> Result<String, String> {
     if prompt.trim().is_empty() || prompt.len() > 30000 { return Err("Prompt must contain 1 to 30,000 bytes".into()); }
-    if !matches!(backend.as_str(), "CPU" | "GPU") { return Err("Backend must be CPU or GPU".into()); }
+    if !matches!(backend.as_str(), "CPU" | "GPU" | "NPU") { return Err("Backend must be CPU, GPU or NPU".into()); }
+    if thinking_budget > 8192 || max_output_tokens == 0 || max_output_tokens > 8192 {
+        return Err("Thinking budget and output token limits are outside the supported safety range".into());
+    }
     let model = PathBuf::from(&model_path);
     if model.extension().and_then(|x| x.to_str()) != Some("litertlm") || !model.is_file() {
         return Err("Select an existing .litertlm model file".into());
@@ -94,13 +97,18 @@ async fn litert_generate(model_path: String, prompt: String, backend: String) ->
     let code = r#"
 import sys, litert_lm
 model_path, prompt, backend_name = sys.argv[1], sys.argv[2], sys.argv[3]
+enable_thinking = sys.argv[4].lower() == "true"
+thinking_budget = int(sys.argv[5])
+max_output_tokens = int(sys.argv[6])
 backend = getattr(litert_lm.Backend, backend_name)()
+thinking = litert_lm.ThinkingConfig(enable_thinking=enable_thinking, thinking_token_budget=thinking_budget)
 with litert_lm.Engine(model_path, backend=backend) as engine:
-    with engine.create_conversation() as conversation:
+    with engine.create_conversation(thinking_config=thinking, max_output_tokens=max_output_tokens) as conversation:
         result = conversation.send_message(prompt)
         print(result["content"][0]["text"])
 "#;
-    tauri::async_runtime::spawn_blocking(move || run_litert_python(code, &[model_path, prompt, backend])).await.map_err(|e| e.to_string())?
+    let args = vec![model_path, prompt, backend, enable_thinking.to_string(), thinking_budget.to_string(), max_output_tokens.to_string()];
+    tauri::async_runtime::spawn_blocking(move || run_litert_python(code, &args)).await.map_err(|e| e.to_string())?
 }
 
 
