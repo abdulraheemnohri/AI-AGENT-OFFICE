@@ -163,7 +163,9 @@ fn read_workspace_file(root: String, relative: String) -> Result<String, String>
 fn write_workspace_file(root: String, relative: String, content: String, overwrite: bool) -> Result<String, String> {
     if content.len() > 5 * 1024 * 1024 { return Err("File content exceeds the 5 MB safety limit".into()); }
     let (root_path, target) = safe_workspace_target(&root, &relative)?;
-    if target.exists() {
+    if fs::symlink_metadata(&target).is_ok() {
+        let link_metadata = fs::symlink_metadata(&target).map_err(|e| e.to_string())?;
+        if link_metadata.file_type().is_symlink() { return Err("Symbolic links are not allowed as write targets".into()); }
         let canonical = target.canonicalize().map_err(|e| e.to_string())?;
         if !canonical.starts_with(&root_path) { return Err("Target path escapes the selected workspace".into()); }
         if !overwrite { return Err("File already exists; confirm overwrite before saving".into()); }
