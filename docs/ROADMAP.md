@@ -9,3 +9,9 @@
 6 Production: compatibility/security/performance tests, Windows validation, NSIS/MSI and signed releases.
 
 A milestone is complete only when code, tests and documentation exist.
+
+## Current milestone additions
+- Implemented PC document import/export, CSV and slide outline exports, and versioned workspace JSON backup/restore.
+- Implemented a local Google LiteRT-LM Python API bridge with CPU/GPU selection; runtime/model assets remain a separate offline payload.
+- Added Windows offline payload preparation, local-wheel installation and installer packaging scripts.
+- Still required for a truly self-contained offline installer: bundle a tested Python runtime, LiteRT-LM native dependencies, and licensed model weights; verify on a clean Windows machine without internet.
