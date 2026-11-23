@@ -16,7 +16,7 @@
 - ODT text import/export with editable paragraphs and heading levels. Complex styles, images, tables and page layout are not fully preserved.
 
 ## Sheets and presentations
-- CSV import/export, quoted fields, multiline values, cell editing, row/column extension and basic formula engine supporting arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX, COUNT, PRODUCT, MEDIAN, ABS, SQRT, POWER, MOD, ROUND, ROUNDUP and ROUNDDOWN.
+- CSV import/export, quoted fields, multiline values, cell editing, row/column extension, case-insensitive row filtering across raw/formula-result values, stable ascending/descending sorting by selected column (numeric-aware, blank values last, optional header preservation), and basic formula engine supporting arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX, COUNT, PRODUCT, MEDIAN, ABS, SQRT, POWER, MOD, ROUND, ROUNDUP and ROUNDDOWN.
 - Multi-worksheet XLSX and ODS import/export with worksheet tabs, add/delete/rename controls, formula preservation, safe unique XLSX worksheet names, a 50 MB XLSX import cap and a 50-sheet workspace cap. ODS import is bounded to 200,000 cells and 100 sheets. Workbook backups and autosave preserve all worksheets. Cell formatting, charts, pivot tables, macros and advanced OpenFormula compatibility are not preserved.
 - Slide outline editing, slide move up/down, duplicate and delete.
 - PPTX and ODP import/export for slide titles and body text. Exported ODP slides use a basic editable text layout; visual fidelity, media, transitions and speaker-note preservation are not implemented.
