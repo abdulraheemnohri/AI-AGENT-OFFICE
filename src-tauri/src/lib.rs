@@ -1,6 +1,6 @@
 use serde::Serialize;
 #[cfg(windows)] use std::os::windows::ffi::OsStrExt;
-use std::{fs,path::PathBuf};
+use std::{fs,path::PathBuf,process::Command};
 use tauri_plugin_dialog::DialogExt;
 #[derive(Serialize)] struct OpenedDocument{name:String,path:String,content:String}
 #[tauri::command] async fn open_document(app:tauri::AppHandle)->Result<Option<OpenedDocument>,String>{let Some(p)=app.dialog().file().blocking_pick_file()else{return Ok(None)};let path:PathBuf=p.into_path().map_err(|e|e.to_string())?;let m=fs::metadata(&path).map_err(|e|e.to_string())?;if m.len()>20*1024*1024{return Err("Text file exceeds 20 MB".into())}let content=fs::read_to_string(&path).map_err(|e|e.to_string())?;let name=path.file_name().and_then(|n|n.to_str()).unwrap_or("Document").to_string();Ok(Some(OpenedDocument{name,path:path.to_string_lossy().into_owned(),content}))}
@@ -53,4 +53,55 @@ fn save_to_usb(drive_root: String, filename: String, content: String) -> Result<
     #[cfg(not(windows))] { let _ = (drive_root, filename, content); Err("USB removable-drive export is supported on Windows only".into()) }
 }
 
-pub fn run(){tauri::Builder::default().plugin(tauri_plugin_dialog::init()).invoke_handler(tauri::generate_handler![open_document,save_document,list_removable_drives,save_to_usb]).run(tauri::generate_context!()).expect("AI Agent Office startup failed");}
+
+#[tauri::command]
+fn pick_litert_model(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let Some(path) = app.dialog().file().add_filter("LiteRT-LM model", &["litertlm"]).blocking_pick_file() else { return Ok(None); };
+    let path: PathBuf = path.into_path().map_err(|e| e.to_string())?;
+    if !path.is_file() { return Err("Selected model file does not exist".into()); }
+    Ok(Some(path.to_string_lossy().into_owned()))
+}
+
+fn run_litert_python(code: &str, args: &[String]) -> Result<String, String> {
+    let first = Command::new("python").arg("-c").arg(code).args(args).output();
+    let output = match first {
+        Ok(output) => output,
+        Err(_) => Command::new("py").arg("-3").arg("-c").arg(code).args(args).output()
+            .map_err(|e| format!("Python 3 was not found. Install Python and the offline LiteRT-LM runtime package. Details: {}", e))?,
+    };
+    if !output.status.success() {
+        let error = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("LiteRT-LM failed: {}", error.trim()));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+#[tauri::command]
+fn litert_status() -> Result<String, String> {
+    let code = "import litert_lm; print('LiteRT-LM Python API is ready')";
+    run_litert_python(code, &[])
+}
+
+#[tauri::command]
+fn litert_generate(model_path: String, prompt: String, backend: String) -> Result<String, String> {
+    if prompt.trim().is_empty() || prompt.len() > 30000 { return Err("Prompt must contain 1 to 30,000 bytes".into()); }
+    if !matches!(backend.as_str(), "CPU" | "GPU") { return Err("Backend must be CPU or GPU".into()); }
+    let model = PathBuf::from(&model_path);
+    if model.extension().and_then(|x| x.to_str()) != Some("litertlm") || !model.is_file() {
+        return Err("Select an existing .litertlm model file".into());
+    }
+    let metadata = fs::metadata(&model).map_err(|e| e.to_string())?;
+    if metadata.len() == 0 { return Err("The selected model file is empty".into()); }
+    let code = r#"
+import sys, litert_lm
+model_path, prompt, backend_name = sys.argv[1], sys.argv[2], sys.argv[3]
+backend = getattr(litert_lm.Backend, backend_name)()
+with litert_lm.Engine(model_path, backend=backend) as engine:
+    with engine.create_conversation() as conversation:
+        result = conversation.send_message(prompt)
+        print(result["content"][0]["text"])
+"#;
+    run_litert_python(code, &[model_path, prompt, backend])
+}
+
+pub fn run(){tauri::Builder::default().plugin(tauri_plugin_dialog::init()).invoke_handler(tauri::generate_handler![open_document,save_document,list_removable_drives,save_to_usb,pick_litert_model,litert_status,litert_generate]).run(tauri::generate_context!()).expect("AI Agent Office startup failed");}
