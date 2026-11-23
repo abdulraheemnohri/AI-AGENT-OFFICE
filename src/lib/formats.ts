@@ -244,3 +244,249 @@ export function exportXlsxWorkbook(sheets: XlsxWorksheet[]): Blob {
   const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
   return new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 }
+
+
+function xmlEscape(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+
+function decodeXmlEntities(value: string): string {
+  return decodeXmlText(value)
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)));
+}
+
+function odfInlineText(fragment: string): string {
+  return fragment
+    .replace(/<text:line-break\s*\/>/g, "\n")
+    .replace(/<text:tab\s*\/>/g, "\t")
+    .replace(/<\/text:p>\s*<text:p[^>]*>/g, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function odfParagraphs(xml: string): string[] {
+  const paragraphs: string[] = [];
+  const pattern = /<text:(h|p)\b([^>]*)>([\s\S]*?)<\/text:\1>/g;
+  for (const match of xml.matchAll(pattern)) {
+    const text = decodeXmlEntities(odfInlineText(match[3])).trim();
+    if (!text) continue;
+    if (match[1] === "h") {
+      const level = Number(match[2].match(/text:outline-level="(\d+)"/)?.[1] || 1);
+      paragraphs.push("#".repeat(Math.max(1, Math.min(6, level))) + " " + text);
+    } else {
+      paragraphs.push(text);
+    }
+  }
+  return paragraphs;
+}
+
+const ODF_NAMESPACES = 'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"';
+
+async function createOdfPackage(mimetype: string, contentXml: string): Promise<Blob> {
+  const zip = new JSZip();
+  zip.file("mimetype", mimetype, { compression: "STORE" });
+  zip.file("content.xml", contentXml);
+  zip.file("styles.xml", '<?xml version="1.0" encoding="UTF-8"?><office:document-styles ' + ODF_NAMESPACES + ' office:version="1.3"><office:styles/><office:automatic-styles/><office:master-styles/></office:document-styles>');
+  zip.file("meta.xml", '<?xml version="1.0" encoding="UTF-8"?><office:document-meta ' + ODF_NAMESPACES + ' office:version="1.3"><office:meta/></office:document-meta>');
+  zip.file("settings.xml", '<?xml version="1.0" encoding="UTF-8"?><office:document-settings ' + ODF_NAMESPACES + ' office:version="1.3"><office:settings/></office:document-settings>');
+  const manifest = '<?xml version="1.0" encoding="UTF-8"?><manifest:manifest ' + ODF_NAMESPACES + ' manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="' + mimetype + '"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="settings.xml" manifest:media-type="text/xml"/></manifest:manifest>';
+  zip.folder("META-INF")!.file("manifest.xml", manifest);
+  return zip.generateAsync({ type: "blob", compression: "DEFLATE", mimeType: mimetype });
+}
+
+/** Import the text structure of RTF. Rich page layout and embedded objects are intentionally not converted. */
+export function importRtf(source: string): string {
+  if (!source.trimStart().startsWith("{\\rtf")) throw new Error("The file does not begin with a valid RTF document header");
+  if (source.length > 20 * 1024 * 1024) throw new Error("RTF exceeds the 20 MB import limit");
+  const output: string[] = [];
+  const stack: { skip: boolean }[] = [];
+  let skip = false;
+  let uc = 1;
+  let fallback = 0;
+  for (let i = 0; i < source.length;) {
+    const ch = source[i];
+    if (ch === "{") {
+      stack.push({ skip });
+      i++;
+      const destination = source.slice(i).match(/^(?:\\\*\\)?(fonttbl|colortbl|stylesheet|info|pict|object|header\d?|footer\d?|filetbl|listtable|listoverridetable)\b/i);
+      if (destination) skip = true;
+      continue;
+    }
+    if (ch === "}") {
+      const previous = stack.pop();
+      skip = previous?.skip ?? false;
+      i++;
+      continue;
+    }
+    if (ch !== "\\") {
+      if (!skip) {
+        if (fallback > 0) fallback--;
+        else if (ch !== "\r" && ch !== "\n") output.push(ch);
+      }
+      i++;
+      continue;
+    }
+    i++;
+    if (i >= source.length) break;
+    const symbol = source[i];
+    if (symbol === "\\" || symbol === "{" || symbol === "}") {
+      if (!skip && fallback === 0) output.push(symbol);
+      else if (fallback > 0) fallback--;
+      i++;
+      continue;
+    }
+    if (symbol === "'") {
+      const hex = source.slice(i + 1, i + 3);
+      if (/^[0-9a-f]{2}$/i.test(hex)) {
+        if (!skip && fallback === 0) output.push(new TextDecoder("windows-1252").decode(Uint8Array.of(parseInt(hex, 16))));
+        else if (fallback > 0) fallback--;
+        i += 3;
+      } else i++;
+      continue;
+    }
+    if (symbol === "~" || symbol === "_" || symbol === "-") {
+      if (!skip && fallback === 0) output.push(symbol === "~" ? "\u00a0" : symbol === "_" ? "\u2011" : "");
+      else if (fallback > 0) fallback--;
+      i++;
+      continue;
+    }
+    if (!/[a-z]/i.test(symbol)) { i++; continue; }
+    const token = source.slice(i).match(/^([a-z]+)(-?\d+)? ?/i);
+    if (!token) continue;
+    i += token[0].length;
+    const word = token[1].toLowerCase();
+    const value = token[2] === undefined ? undefined : Number(token[2]);
+    if (word === "uc" && value !== undefined) uc = Math.max(0, Math.min(16, value));
+    if (word === "u" && value !== undefined && !skip) {
+      output.push(String.fromCharCode((value + 65536) % 65536));
+      fallback = uc;
+    } else if (!skip && fallback === 0) {
+      if (word === "par" || word === "line") output.push("\n");
+      else if (word === "tab") output.push("\t");
+      else if (word === "emdash") output.push("\u2014");
+      else if (word === "endash") output.push("\u2013");
+      else if (word === "bullet") output.push("\u2022");
+      else if (word === "lquote") output.push("\u2018");
+      else if (word === "rquote") output.push("\u2019");
+      else if (word === "ldblquote") output.push("\u201c");
+      else if (word === "rdblquote") output.push("\u201d");
+    }
+  }
+  return output.join("").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+export async function importOdt(bytes: ArrayBuffer): Promise<string> {
+  const zip = await JSZip.loadAsync(bytes);
+  const content = zip.file("content.xml");
+  if (!content) throw new Error("ODT package is missing content.xml");
+  const xml = await content.async("text");
+  if (!/<office:body\b/.test(xml) || !/<office:text\b/.test(xml)) throw new Error("The OpenDocument package is not a text document");
+  return odfParagraphs(xml).join("\n");
+}
+
+export async function exportOdt(markdown: string): Promise<Blob> {
+  const paragraphs = markdown.split(/\r?\n/).map(line => {
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    if (heading) return '<text:h text:outline-level="' + heading[1].length + '">' + xmlEscape(heading[2]) + '</text:h>';
+    return "<text:p>" + xmlEscape(line) + "</text:p>";
+  }).join("");
+  const xml = '<?xml version="1.0" encoding="UTF-8"?><office:document-content ' + ODF_NAMESPACES + ' office:version="1.3"><office:automatic-styles/><office:body><office:text>' + paragraphs + '</office:text></office:body></office:document-content>';
+  return createOdfPackage("application/vnd.oasis.opendocument.text", xml);
+}
+
+export type OdsWorksheet = { name: string; cells: string[][] };
+
+function repeatedCount(attributes: string, name: string, max: number): number {
+  const value = Number(attributes.match(new RegExp(name + '="(\\\\d+)"'))?.[1] || 1);
+  return Number.isFinite(value) ? Math.max(1, Math.min(max, value)) : 1;
+}
+
+/** Import plain values and basic OpenFormula expressions from every ODS sheet. */
+export async function importOdsWorkbook(bytes: ArrayBuffer): Promise<OdsWorksheet[]> {
+  const zip = await JSZip.loadAsync(bytes);
+  const content = zip.file("content.xml");
+  if (!content) throw new Error("ODS package is missing content.xml");
+  const xml = await content.async("text");
+  if (!/<office:spreadsheet\b/.test(xml)) throw new Error("The OpenDocument package is not a spreadsheet");
+  const sheets: OdsWorksheet[] = [];
+  for (const table of xml.matchAll(/<table:table\b([^>]*)>([\s\S]*?)<\/table:table>/g)) {
+    const name = decodeXmlEntities(table[1].match(/table:name="([^"]*)"/)?.[1] || "Sheet" + (sheets.length + 1));
+    const rows: string[][] = [];
+    for (const rowMatch of table[2].matchAll(/<table:table-row\b([^>]*)>([\s\S]*?)<\/table:table-row>/g)) {
+      const rowAttrs = rowMatch[1];
+      const rowContent = rowMatch[2];
+      const rowCopies = repeatedCount(rowAttrs, "table:number-rows-repeated", 1000);
+      const cells: string[] = [];
+      const cellPattern = /<table:(table-cell|covered-table-cell)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/table:\1>)/g;
+      for (const cell of rowContent.matchAll(cellPattern)) {
+        const attrs = cell[2];
+        const body = cell[3] || "";
+        const formula = attrs.match(/table:formula="([^"]*)"/)?.[1];
+        let value = "";
+        if (formula) value = "=" + decodeXmlEntities(formula.replace(/^of:=/, "").replace(/\[\./g, "").replace(/\]/g, "").replace(/;/g, ","));
+        else {
+          const text = odfParagraphs(body).join("\n");
+          value = text || decodeXmlEntities(attrs.match(/office:(?:string-value|value|date-value|time-value)="([^"]*)"/)?.[1] || "");
+        }
+        const copies = repeatedCount(attrs, "table:number-columns-repeated", 1000);
+        for (let n = 0; n < copies && cells.length < 1000; n++) cells.push(value);
+      }
+      for (let n = 0; n < rowCopies && rows.length < 10000; n++) rows.push(cells.slice());
+      if (rows.length * Math.max(1, ...rows.map(r => r.length)) > 200000) throw new Error("ODS workbook exceeds the 200,000-cell import safety limit");
+    }
+    if (rows.length) sheets.push({ name, cells: rows });
+    if (sheets.length >= 100) break;
+  }
+  if (!sheets.length) throw new Error("ODS workbook contains no readable worksheets");
+  return sheets;
+}
+
+function odfFormula(value: string): string {
+  return value.slice(1).replace(/(\$?[A-Z]{1,3}\$?\d+)/g, "[$.$1]").replace(/,/g, ";");
+}
+
+export async function exportOdsWorkbook(sheets: OdsWorksheet[]): Promise<Blob> {
+  if (!sheets.length) throw new Error("An ODS workbook must contain at least one worksheet");
+  if (sheets.length > 100) throw new Error("ODS export supports at most 100 worksheets");
+  const tables = sheets.map((sheet, index) => {
+    const rows = sheet.cells.map(row => "<table:table-row>" + row.map(value => {
+      if (value.startsWith("=")) return '<table:table-cell table:formula="of:=' + xmlEscape(odfFormula(value)) + '" office:value-type="float" office:value="0"/>';
+      return '<table:table-cell office:value-type="string"><text:p>' + xmlEscape(value) + "</text:p></table:table-cell>";
+    }).join("") + "</table:table-row>").join("");
+    return '<table:table table:name="' + xmlEscape((sheet.name || "Sheet" + (index + 1)).slice(0, 31)) + '">' + rows + "</table:table>";
+  }).join("");
+  const xml = '<?xml version="1.0" encoding="UTF-8"?><office:document-content ' + ODF_NAMESPACES + ' office:version="1.3"><office:automatic-styles/><office:body><office:spreadsheet>' + tables + '</office:spreadsheet></office:body></office:document-content>';
+  return createOdfPackage("application/vnd.oasis.opendocument.spreadsheet", xml);
+}
+
+export async function importOdp(bytes: ArrayBuffer): Promise<{ title: string; body: string }[]> {
+  const zip = await JSZip.loadAsync(bytes);
+  const content = zip.file("content.xml");
+  if (!content) throw new Error("ODP package is missing content.xml");
+  const xml = await content.async("text");
+  if (!/<office:presentation\b/.test(xml)) throw new Error("The OpenDocument package is not a presentation");
+  const slides: { title: string; body: string }[] = [];
+  for (const page of xml.matchAll(/<draw:page\b[^>]*>([\s\S]*?)<\/draw:page>/g)) {
+    const paragraphs = odfParagraphs(page[1]).filter(Boolean);
+    slides.push({ title: paragraphs[0]?.replace(/^#{1,6}\s+/, "") || "Untitled slide", body: paragraphs.slice(1).join("\n") });
+  }
+  if (!slides.length) throw new Error("ODP presentation contains no slides");
+  return slides;
+}
+
+export async function exportOdp(slides: { title: string; body: string }[]): Promise<Blob> {
+  if (!slides.length) throw new Error("A presentation must contain at least one slide");
+  if (slides.length > 500) throw new Error("ODP export supports at most 500 slides");
+  const pages = slides.map((slide, index) => {
+    const text = [slide.title, ...slide.body.split(/\r?\n/)].map(line => "<text:p>" + xmlEscape(line) + "</text:p>").join("");
+    return '<draw:page draw:name="page' + (index + 1) + '" draw:style-name="dp1"><draw:frame draw:style-name="gr1" svg:width="24cm" svg:height="15cm" svg:x="2cm" svg:y="2cm"><draw:text-box>' + text + "</draw:text-box></draw:frame></draw:page>";
+  }).join("");
+  const xml = '<?xml version="1.0" encoding="UTF-8"?><office:document-content ' + ODF_NAMESPACES + ' office:version="1.3"><office:automatic-styles><style:style style:name="dp1" style:family="drawing-page"/><style:style style:name="gr1" style:family="graphic"/></office:automatic-styles><office:body><office:presentation>' + pages + '</office:presentation></office:body></office:document-content>';
+  return createOdfPackage("application/vnd.oasis.opendocument.presentation", xml);
+}
