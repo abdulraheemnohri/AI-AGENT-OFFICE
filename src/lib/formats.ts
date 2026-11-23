@@ -1,13 +1,18 @@
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
-import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import PptxGenJS from "pptxgenjs";
 import { PDFDocument, degrees } from "pdf-lib";
 import JSZip from "jszip";
 
 export async function importDocx(bytes: ArrayBuffer): Promise<string> {
-  const result = await mammoth.extractRawText({ arrayBuffer: bytes });
-  return result.value;
+  const zip = await JSZip.loadAsync(bytes);
+  const documentXml = zip.file("word/document.xml");
+  if (!documentXml) throw new Error("The DOCX package has no Word document body");
+  const xml = await documentXml.async("text");
+  const paragraphs = [...xml.matchAll(/<w:p(?:\\s[^>]*)?>([\\s\\S]*?)<\\/w:p>/g)].map((match) =>
+    [...match[1].matchAll(/<w:t(?:\\s[^>]*)?>([\\s\\S]*?)<\\/w:t>/g)].map((part) => decodeXmlText(part[1])).join("")
+  );
+  return paragraphs.join("\\n");
 }
 
 export async function exportDocx(markdown: string): Promise<Blob> {
@@ -47,7 +52,7 @@ export function exportXlsx(cells: string[][], sheetName = "Sheet1"): Blob {
   cells.forEach((row, r) => row.forEach((value, c) => {
     if (value.startsWith("=")) {
       const address = XLSX.utils.encode_cell({ r, c });
-      sheet[address] = { t: "n", f: value.slice(1) };
+      sheet[address] = { t: "n", f: value.slice(1), v: 0 };
     }
   }));
   XLSX.utils.book_append_sheet(workbook, sheet, (sheetName || "Sheet1").slice(0, 31));
@@ -68,7 +73,8 @@ export async function exportPptx(slides: { title: string; body: string }[]): Pro
     slide.addText(item.body || "", { x: 0.75, y: 1.65, w: 11.7, h: 5.2, fontFace: "Aptos", fontSize: 18, color: "34445D", valign: "top", breakLine: false, paraSpaceAfter: 12 });
     slide.addText("Created with AI Agent Office", { x: 0.75, y: 7.05, w: 11.7, h: 0.2, fontSize: 8, color: "8290A5" });
   }
-  return await pptx.write({ outputType: "blob" }) as Blob;
+  const generated = await pptx.write({ outputType: "blob" }) as Blob;
+  return new Blob([await generated.arrayBuffer()], { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" });
 }
 
 
