@@ -86,7 +86,7 @@ export default function App() {
   function newDocument(){setDoc(prefs.defaultFormat==="Plain text (.txt)"?"":"# Untitled document\n\n");setFile("");setPath("");setPage("Writer");setPreview(false);setNotice("New document");}
   function updateCell(r:number,c:number,v:string){setGrid(old=>old.map((row,i)=>i===r?row.map((x,j)=>j===c?v:x):row));}
   async function openCsv(){setBusy(true);try{const d=await invoke<Opened|null>("open_document");if(!d)return;setGrid(parseCsv(d.content,prefs.csvDelimiter));setSheetName(d.name);setPath("");setNotice("Imported "+d.name+"; export will use Save As.");}catch(e){setNotice(String(e));}finally{setBusy(false);}}
-  async function saveCsv(){await saveContent(stringifyCsv(grid),sheetName+".csv",true);}
+  async function saveCsv(){await saveContent(stringifyCsv(grid,prefs.csvDelimiter),sheetName+".csv",true);}
 
   async function chooseWorkspaceRoot(){try{const selected=await invoke<string|null>("pick_workspace_folder");if(selected){setWorkspaceRoot(selected);setWorkspaceFile("");setWorkspaceContent("");await loadWorkspaceEntries(selected);setNotice("Workspace access granted to the selected folder only.");}}catch(e){setNotice(String(e));}}
   async function loadWorkspaceEntries(root=workspaceRoot){if(!root)return;try{const entries=await invoke<WorkspaceEntry[]>("list_workspace_files",{root});setWorkspaceEntries(entries);setNotice("Listed "+entries.length+" items in the selected folder");}catch(e){setNotice("Folder listing failed: "+String(e));}}
