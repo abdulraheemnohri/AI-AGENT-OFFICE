@@ -64,7 +64,7 @@ export async function exportPptx(slides: { title: string; body: string }[]): Pro
     const slide = pptx.addSlide();
     slide.background = { color: "F7F9FC" };
     slide.addText(item.title || "Untitled slide", { x: 0.65, y: 0.55, w: 12, h: 0.8, fontFace: "Aptos Display", fontSize: 28, bold: true, color: "17243A", breakLine: false });
-    slide.addText(item.body || "", { x: 0.75, y: 1.65, w: 11.7, h: 5.2, fontFace: "Aptos", fontSize: 18, color: "34445D", valign: "top", breakLine: false, paraSpaceAfterPt: 12 });
+    slide.addText(item.body || "", { x: 0.75, y: 1.65, w: 11.7, h: 5.2, fontFace: "Aptos", fontSize: 18, color: "34445D", valign: "top", breakLine: false, paraSpaceAfter: 12 });
     slide.addText("Created with AI Agent Office", { x: 0.75, y: 7.05, w: 11.7, h: 0.2, fontSize: 8, color: "8290A5" });
   }
   return await pptx.write({ outputType: "blob" }) as Blob;
