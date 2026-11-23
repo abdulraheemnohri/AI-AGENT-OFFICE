@@ -9,7 +9,7 @@ type Prefs = { offline: boolean; theme: "dark" | "light" | "system"; autosave: b
 const pages: Page[] = ["Home", "Writer", "Sheets", "Slides", "PDF Studio", "AI Agent", "Models & Runtimes", "Settings"];
 const icons = [Home, FileText, Sheet, Presentation, FileDown, Bot, Cpu, Settings];
 const defaults: Prefs = { offline: true, theme: "dark", autosave: true, fontSize: 15, confirmOverwrite: true, telemetry: false, defaultFormat: "Markdown (.md)" };
-const readPrefs = (): Prefs => { try { return { ...defaults, ...JSON.parse(localStorage.getItem("aao.prefs") || "{}") }; } catch { return defaults; } };
+const readPrefs = (): Prefs => { try { return { ...defaults, ...JSON.parse(localStorage.getItem("aao.prefs") || "{}") }; } catch { return defaults; } };\nfunction readStored<T>(key:string,fallback:T):T{try{const value=localStorage.getItem(key);return value===null?fallback:JSON.parse(value) as T;}catch{return fallback;}}
 function csvParse(input: string): string[][] {
   const rows: string[][] = []; let row: string[] = []; let cell = ""; let quoted = false;
   for (let i = 0; i < input.length; i++) { const c = input[i]; if (c === '"' && quoted && input[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') quoted = !quoted; else if (c === "," && !quoted) { row.push(cell); cell = ""; } else if ((c === "\n" || c === "\r") && !quoted) { if (c === "\r" && input[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; } else cell += c; }
@@ -23,11 +23,11 @@ export default function App() {
   const [page,setPage]=useState<Page>("Home"); const [prefs,setPrefs]=useState<Prefs>(readPrefs);
   const [doc,setDoc]=useState("# Untitled document\n\nStart writing here."); const [file,setFile]=useState(""); const [path,setPath]=useState("");
   const [preview,setPreview]=useState(false); const [find,setFind]=useState(""); const [replace,setReplace]=useState("");
-  const [grid,setGrid]=useState<string[][]>(Array.from({length:16},()=>Array(8).fill(""))); const [sheetName,setSheetName]=useState("Untitled workbook");
-  const [slides,setSlides]=useState([{title:"Welcome",body:"Introduce your topic and key message."}]); const [activeSlide,setActiveSlide]=useState(0);
-  const [task,setTask]=useState(""); const [tasks,setTasks]=useState<{id:number;title:string;done:boolean}[]>([]);
+  const [grid,setGrid]=useState<string[][]>(()=>readStored("aao.grid",Array.from({length:16},()=>Array(8).fill("")))); const [sheetName,setSheetName]=useState(()=>readStored("aao.sheetName","Untitled workbook"));
+  const [slides,setSlides]=useState(()=>readStored("aao.slides",[{title:"Welcome",body:"Introduce your topic and key message."}])); const [activeSlide,setActiveSlide]=useState(0);
+  const [task,setTask]=useState(""); const [tasks,setTasks]=useState<{id:number;title:string;done:boolean}[]>(()=>readStored("aao.tasks",[]));
   const [notice,setNotice]=useState("Ready"); const [busy,setBusy]=useState(false);
-  useEffect(()=>{localStorage.setItem("aao.prefs",JSON.stringify(prefs));document.documentElement.dataset.theme=prefs.theme;},[prefs]);
+  useEffect(()=>{localStorage.setItem("aao.prefs",JSON.stringify(prefs));document.documentElement.dataset.theme=prefs.theme;},[prefs]);\n  useEffect(()=>{localStorage.setItem("aao.grid",JSON.stringify(grid));},[grid]);\n  useEffect(()=>{localStorage.setItem("aao.sheetName",JSON.stringify(sheetName));},[sheetName]);\n  useEffect(()=>{localStorage.setItem("aao.slides",JSON.stringify(slides));},[slides]);\n  useEffect(()=>{localStorage.setItem("aao.tasks",JSON.stringify(tasks));},[tasks]);
   useEffect(()=>{if(!prefs.autosave)return;const id=window.setTimeout(()=>{localStorage.setItem("aao.recovery",JSON.stringify({doc,file,path,at:Date.now()}));},700);return()=>window.clearTimeout(id);},[doc,file,path,prefs.autosave]);
   useEffect(()=>{try{const r=JSON.parse(localStorage.getItem("aao.recovery")||"null");if(r?.doc && !file && doc.startsWith("# Untitled")){setDoc(r.doc);setFile(r.file||"");setPath(r.path||"");}}catch{}},[]);
   const words=useMemo(()=>countWords(doc),[doc]);\n  const calculatedGrid=useMemo(()=>evaluateWorkbook(grid),[grid]);\n  const formulaCount=useMemo(()=>grid.flat().filter(v=>v.startsWith("=")).length,[grid]);
