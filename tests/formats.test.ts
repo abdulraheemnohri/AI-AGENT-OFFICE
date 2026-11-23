@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
-import { exportDocx, exportPptx, exportXlsx, exportOdt, importOdt, importRtf, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage, importXlsxWorkbook, exportXlsxWorkbook } from "../src/lib/formats";
+import { exportDocx, exportPptx, exportXlsx, exportOdt, importOdt, importRtf, extractPdfPages, importDocx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, deletePdfPage, stampPdfPage, importPptx, exportRtf, reorderPdfPages, duplicatePdfPage, insertBlankPdfPage, importXlsxWorkbook, exportXlsxWorkbook, importOdsWorkbook, exportOdsWorkbook, importOdp, exportOdp } from "../src/lib/formats";
 
 describe("Office format engines", () => {
   it("exports and imports a basic DOCX as editable text", async () => {
@@ -114,6 +114,27 @@ describe("Office format engines", () => {
 
   it("rejects malformed RTF input", () => {
     expect(() => importRtf("not an RTF file")).toThrow();
+  });
+
+
+  it("round-trips multi-sheet ODS data and formulas", async () => {
+    const blob = await exportOdsWorkbook([
+      { name: "Summary", cells: [["Total", "=SUM(B2:B3)"], ["A", "5"], ["B", "7"]] },
+      { name: "Details", cells: [["Item"], ["Cable"]] }
+    ]);
+    const sheets = await importOdsWorkbook(await blob.arrayBuffer());
+    expect(sheets).toHaveLength(2);
+    expect(sheets[0].cells[0][0]).toBe("Total");
+    expect(sheets[0].cells[0][1]).toContain("SUM");
+    expect(sheets[1].cells[1][0]).toBe("Cable");
+  });
+
+  it("round-trips ODP slide titles and body text", async () => {
+    const blob = await exportOdp([{ title: "Safety", body: "Isolate first\nVerify absence of voltage" }]);
+    const slides = await importOdp(await blob.arrayBuffer());
+    expect(slides).toHaveLength(1);
+    expect(slides[0].title).toBe("Safety");
+    expect(slides[0].body).toContain("Isolate first");
   });
 
 });
