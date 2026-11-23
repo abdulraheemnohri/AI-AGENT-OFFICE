@@ -28,7 +28,7 @@ export function parseBackup(raw: string): WorkspaceBackup {
   const d = value.data as WorkspaceBackup["data"];
   if (!d.document || typeof d.document.content !== "string" || typeof d.document.name !== "string") throw new Error("Backup document section is invalid");
   if (!d.workbook || typeof d.workbook.name !== "string" || !Array.isArray(d.workbook.cells) || !d.workbook.cells.every(row => Array.isArray(row) && row.every(cell => typeof cell === "string"))) throw new Error("Backup workbook section is invalid");
-  if (d.workbook.sheets !== undefined && (!Array.isArray(d.workbook.sheets) || !d.workbook.sheets.length || !d.workbook.sheets.every(sheet => sheet && typeof sheet.name === "string" && Array.isArray(sheet.cells) && sheet.cells.every(row => Array.isArray(row) && row.every(cell => typeof cell === "string"))))) throw new Error("Backup worksheets section is invalid");
+  if (d.workbook.sheets !== undefined && (!Array.isArray(d.workbook.sheets) || !d.workbook.sheets.length || d.workbook.sheets.length > 50 || !d.workbook.sheets.every(sheet => sheet && typeof sheet.name === "string" && Array.isArray(sheet.cells) && sheet.cells.every(row => Array.isArray(row) && row.every(cell => typeof cell === "string"))))) throw new Error("Backup worksheets section is invalid");
   if (!Array.isArray(d.slides) || !d.slides.every(s => s && typeof s.title === "string" && typeof s.body === "string")) throw new Error("Backup slides section is invalid");
   if (!Array.isArray(d.tasks) || !d.tasks.every(t => t && typeof t.id === "number" && typeof t.title === "string" && typeof t.done === "boolean")) throw new Error("Backup tasks section is invalid");
   if (!d.preferences || typeof d.preferences !== "object") throw new Error("Backup preferences section is invalid");
