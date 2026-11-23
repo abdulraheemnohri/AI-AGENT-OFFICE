@@ -6,20 +6,20 @@ Offline-first Windows desktop productivity workspace built with Tauri 2, React, 
 
 ## Working features in this branch
 - Dashboard and navigation across Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes and Settings.
-- Writer for UTF-8 plain text and Markdown, with edit/preview, word and character counts, find/replace-all, native open/save and optional local recovery snapshot.
-- CSV spreadsheet grid with validated quoted/multiline CSV import/export, cell editing, row/column add/delete, duplicate rows, clear-sheet confirmation, and a local formula engine (arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX and COUNT).
-- Presentation outline editor with slide add/delete/edit and Markdown outline export.
+- Writer for UTF-8 plain text and Markdown, with edit/preview, word and character counts, find/replace-all, native open/save, DOCX text import, basic DOCX export and optional local recovery snapshot.
+- Spreadsheet grid with CSV import/export, first-worksheet XLSX import/export, cell editing, row/column controls and local formulas (arithmetic, cell references, ranges, SUM, AVERAGE, MIN, MAX and COUNT).
+- Presentation outline editor with slide add/delete/edit, Markdown outline export and editable PPTX title/body slide export.
 - Local task checklist and safe-plan template (deterministic; no AI inference or system command execution).
-- Locally persisted UI preferences: theme, editor font size, autosave recovery, offline preference, telemetry preference and print page layout.
+- Locally persisted UI preferences: dark/light/system theme, compact/comfortable density, font size, spell-check toggle/language, autosave delay/recovery, overwrite confirmation, offline preference and print page layout.
 - Windows print integration through the WebView print dialog for installed local/network printers and Windows PDF printers.
 - Windows removable USB storage detection and guarded document/CSV export to detected removable drives.
-- PC file import/export for UTF-8 text/Markdown, CSV workbook import/export and Markdown slide-outline export.
+- PC file import/export for text/Markdown, DOCX text, CSV, first-sheet XLSX and PPTX title/body slides.
 - Versioned full-workspace JSON backup/restore covering document, workbook, slides, tasks, preferences and recovery snapshot.
-- Google LiteRT-LM Python API bridge for local .litertlm inference with CPU/GPU selection, model picker and local prompt UI.
+- Google LiteRT-LM Python API bridge for local .litertlm inference with CPU/GPU selection, model picker, prompt UI and persistent local chat history.
 - Windows offline dependency-wheel preparation, offline LiteRT-LM installation and installer packaging scripts.
 
 ## Not yet implemented
-Native DOCX/ODT/RTF, XLSX/XLS/ODS, PPTX/PPT/ODP and PDF engines; advanced spreadsheet formulas/charts; PDF rendering/OCR; automatic model downloads; bundled Python/LiteRT-LM runtime and bundled model weights; agent tool execution and workflow automation. LiteRT-LM is integrated through its Python API, but its Python package and .litertlm model must be installed/copied separately using the offline payload scripts. Settings such as offline-only and telemetry are preferences only and do not enforce network isolation. USB listing is limited to Windows drives classified as removable; some USB external disks may identify as fixed drives. Printer availability depends on Windows-installed printer drivers. No installer has been built or verified by this repository update.
+Full-fidelity DOCX editing and formatting round-trip; ODT/RTF; multi-sheet XLSX and advanced formulas/charts/pivots; XLS/ODS; PPTX import and canvas editor; PPT/ODP; PDF OCR, signatures, forms and freehand annotations; automatic model downloads; bundled Python/LiteRT-LM runtime and model weights; agent tool execution and workflow automation. DOCX import currently extracts text, DOCX export is basic, XLSX imports only the first sheet, PPTX export creates simple title/body slides, and PDF supports preview, merge, page extraction, rotation, deletion and text stamps. LiteRT-LM is integrated through its Python API, but its Python package and .litertlm model must be installed/copied separately using the offline payload scripts. Settings such as offline-only and telemetry are preferences only and do not enforce network isolation. USB listing is limited to Windows drives classified as removable; some USB external disks may identify as fixed drives. Printer availability depends on Windows-installed printer drivers. No installer has been built or verified by this repository update.
 
 ## Windows requirements
 - Windows 10/11 x64
