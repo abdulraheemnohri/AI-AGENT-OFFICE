@@ -25,7 +25,8 @@
 - Local PDF preview using the Windows WebView PDF viewer.
 - Merge PDFs, extract selected pages, rotate, delete, reorder, duplicate and insert blank pages.
 - Add a simple text stamp, flattened rectangular yellow highlight and flattened note box to the selected page. Annotation geometry uses page-relative percentage coordinates from the top-left.
-- These highlights and note boxes are drawn into page content and are not editable PDF comment annotations. PDF OCR, signatures, interactive form fields, freehand ink, redaction and full layout editing are not implemented.
+- Inspect standard AcroForm text, checkbox and choice fields; fill text, checkbox, dropdown, radio and option-list values while keeping fields interactive. XFA and digital-signature fields are not supported.
+- Highlights and note boxes are drawn into page content and are not editable PDF comment annotations. Secure redaction, OCR, certificate-based digital signatures, freehand ink and full layout editing are not implemented.
 
 ## AI and device integration
 - Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU/NPU backend selection (NPU is hardware/runtime dependent), configurable thinking mode, thinking-token budget, output-token limit, optional speculative decoding/MTP, runtime check, local prompt/response and persisted local chat history.
@@ -46,7 +47,7 @@
 - Full-fidelity DOCX/ODT/RTF editor, OpenDocument formatting and full layout/media round-trip.
 - Advanced spreadsheet formulas, charts, pivot tables, workbook styling and formula compatibility beyond the built-in arithmetic/aggregate subset.
 - Visual PowerPoint canvas, full PPTX import fidelity and animation/media editing.
-- PDF OCR, annotation suite, signatures, forms, redaction and page thumbnails.
+- PDF OCR, native comment annotations, certificate-based signatures, secure redaction and page thumbnails.
 - Built-in offline speech, vision, document RAG, embeddings and model manager with download/checksum/unload.
 - Real agent tool execution, permission scopes, approval gates, workflow builder and audit log.
 - Enforced network isolation, encrypted/scheduled backups, portable runtime/model installer validation and signed production releases.
