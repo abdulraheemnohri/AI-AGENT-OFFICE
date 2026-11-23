@@ -72,17 +72,22 @@ fn pick_litert_model(app: tauri::AppHandle) -> Result<Option<String>, String> {
 }
 
 fn run_litert_python(code: &str, args: &[String]) -> Result<String, String> {
-    let first = Command::new("python").arg("-c").arg(code).args(args).output();
-    let output = match first {
-        Ok(output) => output,
-        Err(_) => Command::new("py").arg("-3").arg("-c").arg(code).args(args).output()
-            .map_err(|e| format!("Python 3 was not found. Install Python and the offline LiteRT-LM runtime package. Details: {}", e))?,
-    };
-    if !output.status.success() {
-        let error = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("LiteRT-LM failed: {}", error.trim()));
+    let mut candidates: Vec<(String, Vec<String>)> = Vec::new();
+    if let Ok(custom) = std::env::var("AI_AGENT_OFFICE_PYTHON") {
+        if !custom.trim().is_empty() { candidates.push((custom, Vec::new())); }
     }
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    candidates.push(("python".into(), Vec::new()));
+    candidates.push(("py".into(), vec!["-3".into()]));
+    candidates.push(("python3".into(), Vec::new()));
+    let mut errors = Vec::new();
+    for (program, prefix) in candidates {
+        match Command::new(&program).args(&prefix).arg("-c").arg(code).args(args).output() {
+            Ok(output) if output.status.success() => return Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()),
+            Ok(output) => errors.push(format!("{}: {}", program, String::from_utf8_lossy(&output.stderr).trim())),
+            Err(error) => errors.push(format!("{}: {}", program, error)),
+        }
+    }
+    Err(format!("LiteRT-LM could not run. Install the offline runtime or set AI_AGENT_OFFICE_PYTHON. {}", errors.join(" | ")))
 }
 
 #[tauri::command]
@@ -97,8 +102,9 @@ async fn litert_generate(model_path: String, prompt: String, backend: String, en
     if thinking_budget > 8192 || max_output_tokens == 0 || max_output_tokens > 8192 {
         return Err("Thinking budget and output token limits are outside the supported safety range".into());
     }
+    if enable_mtp && backend != "GPU" { return Err("Multi-token prediction is currently supported only with the GPU backend".into()); }
     let model = PathBuf::from(&model_path);
-    if model.extension().and_then(|x| x.to_str()) != Some("litertlm") || !model.is_file() {
+    if !model.extension().and_then(|x| x.to_str()).map(|x| x.eq_ignore_ascii_case("litertlm")).unwrap_or(false) || !model.is_file() {
         return Err("Select an existing .litertlm model file".into());
     }
     let metadata = fs::metadata(&model).map_err(|e| e.to_string())?;
