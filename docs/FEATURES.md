@@ -12,13 +12,14 @@
 - UTF-8 text/Markdown editor, edit/preview, word/character counts, find/replace-all, native Windows open/save.
 - Basic DOCX text import through Mammoth. Formatting and layout are not preserved.
 - Basic DOCX export with headings, paragraphs and bullet lists.
-- Basic RTF export. RTF import and rich formatting round-trip are not implemented.
+- Basic RTF import/export with paragraph breaks, tabs, escaped characters and common Unicode controls. Rich formatting, embedded objects and exact page layout are not retained.
+- ODT text import/export with editable paragraphs and heading levels. Complex styles, images, tables and page layout are not fully preserved.
 
 ## Sheets and presentations
 - CSV import/export, quoted fields, multiline values, cell editing, row/column extension and basic formula engine.
 - Multi-worksheet XLSX import/export with worksheet tabs, add/delete/rename controls, formula preservation, safe unique worksheet names, a 50 MB import cap and a 50-sheet workspace cap. Workbook backups and autosave preserve all worksheets. Cell formatting, charts, pivot tables and macros are not preserved.
 - Slide outline editing, slide move up/down, duplicate and delete.
-- PPTX import extracts slide text; PPTX export creates simple editable title/body slides. Visual layout, media, transitions and speaker-note fidelity are not preserved.
+- PPTX and ODP import/export for slide titles and body text. Exported ODP slides use a basic editable text layout; visual fidelity, media, transitions and speaker-note preservation are not implemented.
 
 ## PDF Studio
 - Local PDF preview using the Windows WebView PDF viewer.
