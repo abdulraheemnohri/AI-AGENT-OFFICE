@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import JSZip from "jszip";
 import {
   exportOdt, importOdt, exportOdsWorkbook, importOdsWorkbook,
-  exportOdp, importOdp, importRtf
+  exportOdp, importOdp, importRtf, importDocx, exportDocx
 } from "../src/lib/formats";
 
 describe("OpenDocument and RTF interoperability", () => {
@@ -36,6 +36,26 @@ describe("OpenDocument and RTF interoperability", () => {
     const blob = await exportOdp(source);
     const imported = await importOdp(await blob.arrayBuffer());
     expect(imported).toEqual(source);
+  });
+
+  it("imports DOCX headings, inline emphasis and simple tables", async () => {
+    const zip = new JSZip();
+    zip.file("word/document.xml", '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Title</w:t></w:r></w:p><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Bold</w:t></w:r><w:r><w:rPr><w:i/></w:rPr><w:t> italic</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Name</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Value</w:t></w:r></w:p></w:tc></w:tr><w:tr><w:tc><w:p><w:r><w:t>Meter</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>10</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:sectPr/></w:body></w:document>');
+    const bytes = await zip.generateAsync({ type: "arraybuffer" });
+    expect(await importDocx(bytes)).toBe("# Title\n**Bold** * italic*\n| Name | Value |\n| --- | --- |\n| Meter | 10 |");
+  });
+
+  it("exports Markdown emphasis and headings into editable DOCX runs", async () => {
+    const markdown = "# Heading\n**bold** and *italic* and " + String.fromCharCode(96) + "code" + String.fromCharCode(96);
+    const blob = await exportDocx(markdown);
+    const zip = await JSZip.loadAsync(await blob.arrayBuffer());
+    const xml = await zip.file("word/document.xml")!.async("text");
+    expect(xml).toContain("Heading");
+    expect(xml).toContain("bold");
+    expect(xml).toContain("italic");
+    expect(xml).toContain("code");
+    expect(xml).toMatch(/<w:b\/>/);
+    expect(xml).toMatch(/<w:i\/>/);
   });
 
   it("rejects invalid ODF package types", async () => {
