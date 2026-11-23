@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createBackup, parseBackup } from "../src/lib/backup";
+import { createBackup, parseBackup, encryptBackupText, decryptBackupText } from "../src/lib/backup";
 
 const data = {
   document: { content: "Hello", name: "notes.md" },
@@ -32,6 +32,19 @@ describe("workspace backup", () => {
     expect(parseBackup(JSON.stringify(backup)).data.pdf).toEqual({ name: "sample.pdf", base64: "JVBERi0=" });
     const invalid = { ...backup, data: { ...backup.data, pdf: { name: "bad.pdf", base64: "not base64!" } } };
     expect(() => parseBackup(JSON.stringify(invalid))).toThrow(/PDF section/);
+  });
+
+  it("encrypts and decrypts backups with authenticated AES-GCM", async () => {
+    const raw = JSON.stringify(createBackup(data));
+    const encrypted = await encryptBackupText(raw, "correct horse battery");
+    expect(encrypted).not.toContain("Hello");
+    expect(await decryptBackupText(encrypted, "correct horse battery")).toBe(raw);
+    await expect(decryptBackupText(encrypted, "wrong password")).rejects.toThrow(/incorrect|modified/);
+  });
+
+  it("rejects weak passwords and invalid encrypted backup envelopes", async () => {
+    await expect(encryptBackupText("{}", "short")).rejects.toThrow(/10 and 1024/);
+    await expect(decryptBackupText('{"format":"unknown"}', "password")).rejects.toThrow(/Unsupported/);
   });
 
   it("rejects oversized backups", () => {
