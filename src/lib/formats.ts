@@ -4,26 +4,94 @@ import PptxGenJS from "pptxgenjs";
 import { PDFDocument, degrees } from "pdf-lib";
 import JSZip from "jszip";
 
+function docxParagraphText(xml: string): string {
+  const runs: string[] = [];
+  const runPattern = /<w:r(?:\s[^>]*)?>([\s\S]*?)<\/w:r>/g;
+  for (const match of xml.matchAll(runPattern)) {
+    const run = match[1];
+    const value = [...run.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(part => decodeXmlText(part[1])).join("")
+      + [...run.matchAll(/<w:tab\s*\/>/g)].map(() => "\t").join("")
+      + [...run.matchAll(/<w:br(?:\s[^>]*)?\/>/g)].map(() => "\n").join("");
+    if (!value) continue;
+    const bold = /<w:b(?:\s[^>]*)?\/>/.test(run) && !/<w:b[^>]*w:val="(?:0|false|off)"/.test(run);
+    const italic = /<w:i(?:\s[^>]*)?\/>/.test(run) && !/<w:i[^>]*w:val="(?:0|false|off)"/.test(run);
+    const strike = /<w:strike(?:\s[^>]*)?\/>/.test(run);
+    runs.push(strike ? "~~" + value + "~~" : bold && italic ? "***" + value + "***" : bold ? "**" + value + "**" : italic ? "*" + value + "*" : value);
+  }
+  if (runs.length) return runs.join("");
+  return [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(part => decodeXmlText(part[1])).join("");
+}
+
 export async function importDocx(bytes: ArrayBuffer): Promise<string> {
+  if (bytes.byteLength > 100 * 1024 * 1024) throw new Error("DOCX exceeds the 100 MB import limit");
   const zip = await JSZip.loadAsync(bytes);
   const documentXml = zip.file("word/document.xml");
   if (!documentXml) throw new Error("The DOCX package has no Word document body");
   const xml = await documentXml.async("text");
-  const paragraphs = [...xml.matchAll(/<w:p(?:\s[^>]*)?>([\s\S]*?)<\/w:p>/g)].map((match) =>
-    [...match[1].matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((part) => decodeXmlText(part[1])).join("")
-  );
-  return paragraphs.join("\n");
+  const body = xml.match(/<w:body(?:\s[^>]*)?>([\s\S]*?)<\/w:body>/)?.[1];
+  if (!body) throw new Error("The DOCX file has no readable document body");
+  const blocks: string[] = [];
+  const blockPattern = /<w:(p|tbl)(?:\s[^>]*)?>([\s\S]*?)<\/w:\1>/g;
+  for (const block of body.matchAll(blockPattern)) {
+    if (block[1] === "p") {
+      const paragraph = block[2];
+      const text = docxParagraphText(paragraph);
+      if (!text) { blocks.push(""); continue; }
+      const style = paragraph.match(/<w:pStyle[^>]*w:val="([^"]+)"/)?.[1] || "";
+      const heading = style.match(/heading\s*([1-6])/i);
+      if (heading) blocks.push("#".repeat(Math.min(6, Number(heading[1]))) + " " + text);
+      else if (/ListParagraph/i.test(style) || /<w:numPr\b/.test(paragraph)) blocks.push("- " + text);
+      else blocks.push(text);
+    } else {
+      const rows: string[][] = [];
+      for (const row of block[2].matchAll(/<w:tr(?:\s[^>]*)?>([\s\S]*?)<\/w:tr>/g)) {
+        const cells: string[] = [];
+        for (const cell of row[1].matchAll(/<w:tc(?:\s[^>]*)?>([\s\S]*?)<\/w:tc>/g)) {
+          const ps = [...cell[1].matchAll(/<w:p(?:\s[^>]*)?>([\s\S]*?)<\/w:p>/g)].map(p => docxParagraphText(p[1]));
+          cells.push(ps.join(" ").replace(/\|/g, "\\|"));
+        }
+        if (cells.length) rows.push(cells);
+      }
+      if (rows.length) {
+        const width = Math.max(...rows.map(row => row.length));
+        const normalized = rows.map(row => Array.from({ length: width }, (_, i) => row[i] || ""));
+        blocks.push("| " + normalized[0].join(" | ") + " |");
+        blocks.push("| " + normalized[0].map(() => "---").join(" | ") + " |");
+        for (const row of normalized.slice(1)) blocks.push("| " + row.join(" | ") + " |");
+      }
+    }
+  }
+  return blocks.join("\n").trim();
+}
+
+function markdownTextRuns(value: string): TextRun[] {
+  const runs: TextRun[] = [];
+  const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\x60[^\x60]+\x60)/g;
+  let last = 0;
+  for (const match of value.matchAll(pattern)) {
+    const index = match.index ?? 0;
+    if (index > last) runs.push(new TextRun(value.slice(last, index)));
+    const token = match[0];
+    if (token.startsWith("**")) runs.push(new TextRun({ text: token.slice(2, -2), bold: true }));
+    else if (token.startsWith("~~")) runs.push(new TextRun({ text: token.slice(2, -2), strike: true }));
+    else if (token.startsWith("*")) runs.push(new TextRun({ text: token.slice(1, -1), italics: true }));
+    else runs.push(new TextRun({ text: token.slice(1, -1), font: { name: "Consolas" } }));
+    last = index + token.length;
+  }
+  if (last < value.length || !runs.length) runs.push(new TextRun(value.slice(last)));
+  return runs;
 }
 
 export async function exportDocx(markdown: string): Promise<Blob> {
-  const children = markdown.split(/\r?\n/).map((line) => {
-    const heading = line.match(/^(#{1,3})\s+(.*)$/);
+  const children = markdown.split(/\r?\n/).map(line => {
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
     if (heading) {
       const level = heading[1].length === 1 ? HeadingLevel.HEADING_1 : heading[1].length === 2 ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3;
-      return new Paragraph({ text: heading[2], heading: level });
+      return new Paragraph({ children: markdownTextRuns(heading[2]), heading: level });
     }
-    if (line.startsWith("- ")) return new Paragraph({ text: line.slice(2), bullet: { level: 0 } });
-    return new Paragraph({ children: [new TextRun(line)] });
+    if (line.startsWith("- ")) return new Paragraph({ children: markdownTextRuns(line.slice(2)), bullet: { level: 0 } });
+    if (/^\d+\.\s/.test(line)) return new Paragraph({ children: markdownTextRuns(line.replace(/^\d+\.\s/, "")), numbering: { reference: "default-numbering", level: 0 } });
+    return new Paragraph({ children: markdownTextRuns(line) });
   });
   return Packer.toBlob(new Document({ sections: [{ children }] }));
 }
