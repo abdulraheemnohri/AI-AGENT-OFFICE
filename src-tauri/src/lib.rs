@@ -103,4 +103,86 @@ with litert_lm.Engine(model_path, backend=backend) as engine:
     tauri::async_runtime::spawn_blocking(move || run_litert_python(code, &[model_path, prompt, backend])).await.map_err(|e| e.to_string())?
 }
 
-pub fn run(){tauri::Builder::default().plugin(tauri_plugin_dialog::init()).invoke_handler(tauri::generate_handler![open_document,save_document,list_removable_drives,save_to_usb,pick_litert_model,litert_status,litert_generate]).run(tauri::generate_context!()).expect("AI Agent Office startup failed");}
+
+use std::path::{Component, Path};
+
+#[derive(Serialize)]
+struct WorkspaceEntry { name: String, relative: String, is_dir: bool, size: u64 }
+
+#[tauri::command]
+fn pick_workspace_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let Some(path) = app.dialog().file().blocking_pick_folder() else { return Ok(None); };
+    let path: PathBuf = path.into_path().map_err(|e| e.to_string())?;
+    let canonical = path.canonicalize().map_err(|e| e.to_string())?;
+    if !canonical.is_dir() { return Err("Selected workspace is not a folder".into()); }
+    Ok(Some(canonical.to_string_lossy().into_owned()))
+}
+
+fn safe_workspace_target(root: &str, relative: &str) -> Result<(PathBuf, PathBuf), String> {
+    let root_path = PathBuf::from(root).canonicalize().map_err(|e| format!("Workspace folder is unavailable: {}", e))?;
+    if !root_path.is_dir() { return Err("Workspace root must be a directory".into()); }
+    let relative_path = Path::new(relative);
+    if relative.trim().is_empty() || relative_path.components().any(|part| !matches!(part, Component::Normal(_))) {
+        return Err("Only safe relative file paths inside the selected workspace are allowed".into());
+    }
+    let target = root_path.join(relative_path);
+    let parent = target.parent().ok_or("Invalid file parent path")?.canonicalize().map_err(|e| format!("Parent folder is unavailable: {}", e))?;
+    if !parent.starts_with(&root_path) { return Err("Path escapes the selected workspace".into()); }
+    Ok((root_path, parent.join(target.file_name().ok_or("Missing filename")?)))
+}
+
+#[tauri::command]
+fn list_workspace_files(root: String) -> Result<Vec<WorkspaceEntry>, String> {
+    let canonical = PathBuf::from(root).canonicalize().map_err(|e| e.to_string())?;
+    if !canonical.is_dir() { return Err("Workspace root is not a directory".into()); }
+    let mut entries = Vec::new();
+    for item in fs::read_dir(&canonical).map_err(|e| e.to_string())? {
+        let item = item.map_err(|e| e.to_string())?;
+        let kind = item.file_type().map_err(|e| e.to_string())?;
+        if kind.is_symlink() { continue; }
+        let name = item.file_name().to_string_lossy().into_owned();
+        if name.starts_with('.') { continue; }
+        let metadata = item.metadata().map_err(|e| e.to_string())?;
+        entries.push(WorkspaceEntry { name: name.clone(), relative: name, is_dir: kind.is_dir(), size: metadata.len() });
+    }
+    entries.sort_by(|a,b| b.is_dir.cmp(&a.is_dir).then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase())));
+    Ok(entries)
+}
+
+#[tauri::command]
+fn read_workspace_file(root: String, relative: String) -> Result<String, String> {
+    let (root_path, target) = safe_workspace_target(&root, &relative)?;
+    let canonical = target.canonicalize().map_err(|e| e.to_string())?;
+    if !canonical.starts_with(&root_path) { return Err("File path escapes the selected workspace".into()); }
+    let metadata = fs::metadata(&canonical).map_err(|e| e.to_string())?;
+    if !metadata.is_file() || metadata.len() > 5 * 1024 * 1024 { return Err("Only files up to 5 MB can be opened in the local file tools".into()); }
+    fs::read_to_string(canonical).map_err(|e| format!("File is not readable UTF-8 text: {}", e))
+}
+
+#[tauri::command]
+fn write_workspace_file(root: String, relative: String, content: String, overwrite: bool) -> Result<String, String> {
+    if content.len() > 5 * 1024 * 1024 { return Err("File content exceeds the 5 MB safety limit".into()); }
+    let (root_path, target) = safe_workspace_target(&root, &relative)?;
+    if target.exists() {
+        let canonical = target.canonicalize().map_err(|e| e.to_string())?;
+        if !canonical.starts_with(&root_path) { return Err("Target path escapes the selected workspace".into()); }
+        if !overwrite { return Err("File already exists; confirm overwrite before saving".into()); }
+    }
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create(overwrite).truncate(overwrite).create_new(!overwrite);
+    use std::io::Write;
+    let mut file = options.open(&target).map_err(|e| e.to_string())?;
+    file.write_all(content.as_bytes()).map_err(|e| e.to_string())?;
+    Ok(target.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+fn delete_workspace_file(root: String, relative: String) -> Result<(), String> {
+    let (root_path, target) = safe_workspace_target(&root, &relative)?;
+    let canonical = target.canonicalize().map_err(|e| e.to_string())?;
+    if !canonical.starts_with(&root_path) { return Err("Target path escapes the selected workspace".into()); }
+    if !canonical.is_file() { return Err("Only individual files can be deleted from this tool".into()); }
+    fs::remove_file(canonical).map_err(|e| e.to_string())
+}
+
+pub fn run(){tauri::Builder::default().plugin(tauri_plugin_dialog::init()).invoke_handler(tauri::generate_handler![open_document,save_document,list_removable_drives,save_to_usb,pick_litert_model,litert_status,litert_generate,pick_workspace_folder,list_workspace_files,read_workspace_file,write_workspace_file,delete_workspace_file]).run(tauri::generate_context!()).expect("AI Agent Office startup failed");}
