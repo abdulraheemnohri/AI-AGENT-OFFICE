@@ -58,9 +58,9 @@ export function evaluateWorkbook(workbook: Workbook): CellValue[][] {
           for (let r=r1;r<=r2;r++) for(let c=c1;c<=c2;c++) values.push(numeric(readCell(r,c) === "" ? 0 : readCell(r,c)));
           return values;
         };
-        const expression = (): EvalValue => { let v=term(); while(peek().value==="+"||peek().value==="-"){const op=take().value;const b=numeric(term());v=op==="+"?numeric(v)+b:numeric(v)-b;}return v; };
-        const term = (): EvalValue => { let v=factor(); while(peek().value==="*"||peek().value==="/"){const op=take().value;const b=numeric(factor());if(op==="/"&&b===0)throw new Error("Division by zero");v=op==="*"?numeric(v)*b:numeric(v)/b;}return v; };
-        const factor = (): EvalValue => {
+        function expression(): EvalValue { let v=term(); while(peek().value==="+"||peek().value==="-"){const op=take().value;const b=numeric(term());v=op==="+"?numeric(v)+b:numeric(v)-b;}return v; }
+        function term(): EvalValue { let v=factor(); while(peek().value==="*"||peek().value==="/"){const op=take().value;const b=numeric(factor());if(op==="/"&&b===0)throw new Error("Division by zero");v=op==="*"?numeric(v)*b:numeric(v)/b;}return v; }
+        function factor(): EvalValue {
           if(peek().value==="+"){take("+");return numeric(factor());}
           if(peek().value==="-"){take("-");return -numeric(factor());}
           if(peek().value==="("){take("(");const v=expression();take(")");return v;}
