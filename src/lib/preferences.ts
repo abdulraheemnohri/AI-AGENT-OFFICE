@@ -11,7 +11,7 @@ export type PreferenceDefaults = {
   printPaper: "A4" | "Letter";
   printOrientation: "portrait" | "landscape";
   printMargins: number;
-  csvDelimiter: "," | ";" | "\\t";
+  csvDelimiter: "," | ";" | "\t";
   spellCheck: boolean;
   spellLanguage: "en" | "ur";
   density: "comfortable" | "compact";
@@ -50,7 +50,7 @@ export function sanitizePreferences(
     printPaper: pick("printPaper", defaults.printPaper, ["A4", "Letter"]),
     printOrientation: pick("printOrientation", defaults.printOrientation, ["portrait", "landscape"]),
     printMargins: number("printMargins", defaults.printMargins, 10, 20),
-    csvDelimiter: pick("csvDelimiter", defaults.csvDelimiter, [",", ";", "\\t"]),
+    csvDelimiter: pick("csvDelimiter", defaults.csvDelimiter, [",", ";", "\t"]),
     spellCheck: bool("spellCheck", defaults.spellCheck),
     spellLanguage: pick("spellLanguage", defaults.spellLanguage, ["en", "ur"]),
     density: pick("density", defaults.density, ["comfortable", "compact"])
