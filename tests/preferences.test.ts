@@ -15,6 +15,7 @@ describe("sanitizePreferences",()=>{
     expect(value.fontSize).toBe(18);
     expect(value.spellLanguage).toBe("ur");
     expect(value.csvDelimiter).toBe(";");
+    expect(sanitizePreferences(defaults,{csvDelimiter:"\\t"}).csvDelimiter).toBe("\t");
   });
   it("rejects invalid enum and primitive values",()=>{
     const value=sanitizePreferences(defaults,{theme:"neon",autosave:"yes",density:"huge"});
