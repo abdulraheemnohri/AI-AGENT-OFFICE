@@ -9,10 +9,10 @@ export async function importDocx(bytes: ArrayBuffer): Promise<string> {
   const documentXml = zip.file("word/document.xml");
   if (!documentXml) throw new Error("The DOCX package has no Word document body");
   const xml = await documentXml.async("text");
-  const paragraphs = [...xml.matchAll(/<w:p(?:\\s[^>]*)?>([\\s\\S]*?)<\\/w:p>/g)].map((match) =>
-    [...match[1].matchAll(/<w:t(?:\\s[^>]*)?>([\\s\\S]*?)<\\/w:t>/g)].map((part) => decodeXmlText(part[1])).join("")
+  const paragraphs = [...xml.matchAll(/<w:p(?:\s[^>]*)?>([\s\S]*?)<\/w:p>/g)].map((match) =>
+    [...match[1].matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((part) => decodeXmlText(part[1])).join("")
   );
-  return paragraphs.join("\\n");
+  return paragraphs.join("\n");
 }
 
 export async function exportDocx(markdown: string): Promise<Blob> {
