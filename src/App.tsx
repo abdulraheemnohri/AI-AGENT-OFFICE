@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { columnLabel, evaluateWorkbook } from "./lib/spreadsheet";
 import { parseCsv, stringifyCsv } from "./lib/csv";
 import { createBackup, parseBackup } from "./lib/backup";
-import { deletePdfPage, exportDocx, exportPptx, exportRtf, exportXlsx, extractPdfPages, importDocx, importPptx, importXlsx, mergePdfs, pdfPageCount, rotatePdfPage, stampPdfPage } from "./lib/formats";
+import { deletePdfPage, duplicatePdfPage, exportDocx, exportPptx, exportRtf, exportXlsx, extractPdfPages, importDocx, importPptx, importXlsx, insertBlankPdfPage, mergePdfs, pdfPageCount, reorderPdfPages, rotatePdfPage, stampPdfPage } from "./lib/formats";
 import { BrainCircuit, Home, FileText, Sheet, Presentation, FileDown, Bot, Cpu, Settings, FolderOpen, FilePlus2, ShieldCheck, Save, Eye, Edit3, Search, Download, Plus, Trash2, Play, CheckCircle2, ChevronRight, HardDrive, Sparkles, Printer, Archive, Upload, Database, MessageSquare, RefreshCw } from "lucide-react";
 
 type Page = "Home" | "Writer" | "Sheets" | "Slides" | "PDF Studio" | "AI Agent" | "Models & Runtimes" | "Devices & Printing" | "Data & Backup" | "Settings";
