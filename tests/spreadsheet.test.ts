@@ -65,3 +65,20 @@ describe("spreadsheet row and column editing", () => {
     expect(deleteWorkbookColumn([["a","b"],["c","d"]],0)).toEqual([["b"],["d"]]);
   });
 });
+
+describe("spreadsheet dropdown validation", () => {
+  it("accepts allowed values case-insensitively and permits blanks by default", async () => {
+    const { validateCellValue } = await import("../src/lib/spreadsheet");
+    const rule = { type: "list" as const, options: ["Open", "In progress", "Done"] };
+    expect(validateCellValue("open", rule).valid).toBe(true);
+    expect(validateCellValue("", rule).valid).toBe(true);
+    expect(validateCellValue("=A1", rule).valid).toBe(true);
+  });
+  it("rejects values outside the dropdown and can disallow blanks", async () => {
+    const { validateCellValue } = await import("../src/lib/spreadsheet");
+    const rule = { type: "list" as const, options: ["Red", "Green"], allowBlank: false };
+    expect(validateCellValue("Blue", rule)).toEqual({ valid: false, reason: "Choose a value from the column dropdown list." });
+    expect(validateCellValue("", rule).valid).toBe(false);
+    expect(validateCellValue("Green", rule).valid).toBe(true);
+  });
+});
