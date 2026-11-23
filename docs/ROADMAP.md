@@ -22,3 +22,7 @@ A milestone is complete only when code, tests and documentation exist.
 - Added automated format tests for DOCX, XLSX, PPTX and PDF operations.
 - Added a multi-worksheet XLSX engine and Sheets UI with import/export of all worksheets, worksheet add/delete/rename, formula preservation, and backup/autosave persistence. Added tests for round-trip, duplicate/invalid sheet names and backup validation.
 - Remaining format fidelity work: DOCX style/layout round-trip, XLSX styles/charts/pivots and broader formula compatibility, PPTX visual canvas and layout fidelity, ODT/ODS/ODP/RTF import, and PDF OCR/forms/signatures/annotation.
+
+## OpenDocument milestone
+- Added local ODT text import/export, RTF text import, ODS multi-sheet workbook import/export and ODP slide text import/export.
+- Added format round-trip tests. Rich layout, embedded media and advanced Office features remain out of scope for these basic converters.
