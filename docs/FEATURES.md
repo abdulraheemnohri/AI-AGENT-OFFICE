@@ -40,3 +40,12 @@ The current Writer edits UTF-8 text formats only. CSV is the only spreadsheet im
 - scripts/install-offline.ps1 installs LiteRT-LM from local wheels only (--no-index).
 - scripts/package-offline.ps1 builds the Windows Tauri installer and packages the app installer with the offline runtime payload.
 - The offline bundle is Windows/architecture/Python-version specific. The application can run without a network connection after installation; model acquisition and payload preparation happen before moving the bundle to an offline PC.
+
+
+## Office file-format milestone
+- DOCX: import text with Mammoth and export basic Word documents with headings, paragraphs and bullet lists. Formatting/layout fidelity and full DOCX editing are not supported.
+- XLSX: import the first worksheet and export a single worksheet. Cell values and formula expressions are transferred; this app's own formula engine remains the calculation authority.
+- PPTX: export the slide outline to editable PowerPoint title/body slides. Existing PPTX import and visual slide editing are not implemented.
+- PDF: local preview through the Windows WebView PDF viewer; merge multiple PDFs, extract selected pages, rotate or delete pages, add a simple text stamp and download edited PDF.
+- PDF OCR, digital signatures, interactive form fields, freehand/highlight annotation, and full layout editing remain pending.
+- All imported office files are processed locally in the WebView. No cloud conversion service is used.
