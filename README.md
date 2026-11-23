@@ -49,13 +49,13 @@ Expected bundle output: `src-tauri/target/release/bundle`. These commands have n
 
 ### Build an offline Windows distribution
 
-On a Windows preparation PC with internet access, Python 3.10+ and the normal Tauri build toolchain:
+On a Windows preparation PC with internet access, 64-bit Python 3.10, 3.11 or 3.12 and the normal Tauri build toolchain:
 
 ```powershell
-npm run package:offline -- -PythonInstallerPath "C:\Installers\python-3.13.x-amd64.exe" -WebView2InstallerPath "C:\Installers\MicrosoftEdgeWebView2RuntimeInstallerX64.exe" -ModelPath "D:\Models\your-model.litertlm"
+npm run package:offline -- -PythonInstallerPath "C:\Installers\python-3.12.x-amd64.exe" -WebView2InstallerPath "C:\Installers\MicrosoftEdgeWebView2RuntimeInstallerX64.exe" -ModelPath "D:\Models\your-model.litertlm"
 ```
 
-All three paths are optional. Include the official Python installer if the target PC has no Python, include the WebView2 standalone installer if WebView2 is not already installed, and include a model to ship its weights in the offline payload. The command downloads Python wheels on the preparation PC, builds the Tauri installer and creates AI-Agent-Office-Offline-Windows.zip. On the offline PC, install the app from offline-bundle/application-installers, then run Install-LiteRTLM-Offline.ps1 from the extracted bundle. A model is not included unless -ModelPath is supplied. Prepare the payload on Windows for the same CPU architecture and Python version as the target PC.
+All three paths are optional. Include the official Python installer if the target PC has no Python, include the WebView2 standalone installer if WebView2 is not already installed, and include a model to ship its weights in the offline payload. The command downloads Python wheels on the preparation PC, builds the Tauri installer and creates AI-Agent-Office-Offline-Windows.zip. On the offline PC, install the app from offline-bundle/application-installers, then run Install-LiteRTLM-Offline.ps1 from the extracted bundle. A model is not included unless -ModelPath is supplied. Prepare the payload on Windows using 64-bit Python 3.10–3.12. The installer verifies that the target Python version and architecture match the bundled wheels, and verifies SHA-256 hashes before installation.
 
 ## Documentation
 - [Feature status](docs/FEATURES.md)
