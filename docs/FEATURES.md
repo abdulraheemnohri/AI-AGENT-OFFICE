@@ -16,7 +16,7 @@
 
 ## Sheets and presentations
 - CSV import/export, quoted fields, multiline values, cell editing, row/column extension and basic formula engine.
-- XLSX first-worksheet import and single-sheet XLSX export. Other worksheets, formatting, charts, pivot tables and macros are not preserved.
+- Multi-worksheet XLSX import/export with worksheet tabs, add/delete/rename controls, formula preservation, safe unique worksheet names, a 50 MB import cap and a 50-sheet workspace cap. Workbook backups and autosave preserve all worksheets. Cell formatting, charts, pivot tables and macros are not preserved.
 - Slide outline editing, slide move up/down, duplicate and delete.
 - PPTX import extracts slide text; PPTX export creates simple editable title/body slides. Visual layout, media, transitions and speaker-note fidelity are not preserved.
 
@@ -43,7 +43,7 @@
 
 ## Not implemented / next milestones
 - Full-fidelity DOCX editor, ODT/ODS/ODP/RTF import and complete format round-trip.
-- Multi-sheet XLSX editor, advanced formulas, charts, pivot tables and workbook styling.
+- Advanced spreadsheet formulas, charts, pivot tables, workbook styling and formula compatibility beyond the built-in arithmetic/aggregate subset.
 - Visual PowerPoint canvas, full PPTX import fidelity and animation/media editing.
 - PDF OCR, annotation suite, signatures, forms, redaction and page thumbnails.
 - Built-in offline speech, vision, document RAG, embeddings and model manager with download/checksum/unload.
