@@ -106,3 +106,20 @@ export async function rotatePdfPage(bytes: Uint8Array, pageNumber: number, angle
   page.setRotation(degrees((page.getRotation().angle + angle + 360) % 360));
   return doc.save();
 }
+
+export async function deletePdfPage(bytes: Uint8Array, pageNumber: number): Promise<Uint8Array> {
+  const source = await PDFDocument.load(bytes);
+  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > source.getPageCount()) throw new Error("Invalid PDF page number");
+  if (source.getPageCount() === 1) throw new Error("A PDF must contain at least one page");
+  source.removePage(pageNumber - 1);
+  return source.save();
+}
+
+export async function stampPdfPage(bytes: Uint8Array, pageNumber: number, text: string): Promise<Uint8Array> {
+  if (!text.trim() || text.length > 300) throw new Error("Stamp text must contain 1 to 300 characters");
+  const doc = await PDFDocument.load(bytes);
+  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > doc.getPageCount()) throw new Error("Invalid PDF page number");
+  const page = doc.getPage(pageNumber - 1);
+  page.drawText(text, { x: 48, y: 36, size: 11, opacity: 0.8 });
+  return doc.save();
+}
