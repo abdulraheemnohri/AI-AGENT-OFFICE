@@ -275,10 +275,11 @@ function odfParagraphs(xml: string): string[] {
   const pattern = /<text:(h|p)\b([^>]*)>([\s\S]*?)<\/text:\1>/g;
   for (const match of xml.matchAll(pattern)) {
     const text = decodeXmlEntities(odfInlineText(match[3])).trim();
-    if (!text) continue;
     if (match[1] === "h") {
-      const level = Number(match[2].match(/text:outline-level="(\d+)"/)?.[1] || 1);
-      paragraphs.push("#".repeat(Math.max(1, Math.min(6, level))) + " " + text);
+      if (text) {
+        const level = Number(match[2].match(/text:outline-level="(\d+)"/)?.[1] || 1);
+        paragraphs.push("#".repeat(Math.max(1, Math.min(6, level))) + " " + text);
+      }
     } else {
       paragraphs.push(text);
     }
