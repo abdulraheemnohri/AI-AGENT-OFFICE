@@ -14,7 +14,7 @@ Offline-first Windows desktop productivity workspace built with Tauri 2, React, 
 - Windows print integration through the WebView print dialog for installed local/network printers and Windows PDF printers.
 - Windows removable USB storage detection and guarded document/CSV/full-workspace backup export to detected removable drives.
 - PC file import/export for text/Markdown, DOCX text, CSV, first-sheet XLSX and PPTX title/body slides.
-- Versioned full-workspace JSON backup/restore and full-workspace autosave recovery covering document, workbook, slides, tasks, preferences, model settings/history and recovery snapshot.
+- Versioned full-workspace JSON backup/restore covering document, workbook, slides, tasks, preferences, model settings/history and recovery snapshot; manual backups include the open PDF when it is 12 MB or smaller.
 - Google LiteRT-LM Python API bridge for local .litertlm inference with CPU/GPU/NPU selection (NPU experimental), reasoning controls, token budgets, optional multi-token prediction, model picker, prompt UI and persistent local chat history.
 - Windows offline dependency-wheel preparation, offline LiteRT-LM installation and installer packaging scripts.
 
