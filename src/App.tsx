@@ -29,11 +29,15 @@ export default function App() {
   const [task,setTask]=useState(""); const [tasks,setTasks]=useState<{id:number;title:string;done:boolean}[]>(()=>readStored("aao.tasks",[]));
   const [notice,setNotice]=useState("Ready"); const [busy,setBusy]=useState(false);
   useEffect(()=>{localStorage.setItem("aao.prefs",JSON.stringify(prefs));document.documentElement.dataset.theme=prefs.theme;},[prefs]);
-  useEffect(()=>{localStorage.setItem("aao.grid",JSON.stringify(grid));},[grid]);\n  useEffect(()=>{localStorage.setItem("aao.sheetName",JSON.stringify(sheetName));},[sheetName]);\n  useEffect(()=>{localStorage.setItem("aao.slides",JSON.stringify(slides));},[slides]);\n  useEffect(()=>{localStorage.setItem("aao.tasks",JSON.stringify(tasks));},[tasks]);
+  useEffect(()=>{localStorage.setItem("aao.grid",JSON.stringify(grid));},[grid]);
+  useEffect(()=>{localStorage.setItem("aao.sheetName",JSON.stringify(sheetName));},[sheetName]);
+  useEffect(()=>{localStorage.setItem("aao.slides",JSON.stringify(slides));},[slides]);
+  useEffect(()=>{localStorage.setItem("aao.tasks",JSON.stringify(tasks));},[tasks]);
   useEffect(()=>{if(!prefs.autosave)return;const id=window.setTimeout(()=>{localStorage.setItem("aao.recovery",JSON.stringify({doc,file,path,at:Date.now()}));},700);return()=>window.clearTimeout(id);},[doc,file,path,prefs.autosave]);
   useEffect(()=>{try{const r=JSON.parse(localStorage.getItem("aao.recovery")||"null");if(r?.doc && !file && doc.startsWith("# Untitled")){setDoc(r.doc);setFile(r.file||"");setPath(r.path||"");}}catch{}},[]);
   const words=useMemo(()=>countWords(doc),[doc]);
-  const calculatedGrid=useMemo(()=>evaluateWorkbook(grid),[grid]);\n  const formulaCount=useMemo(()=>grid.flat().filter(v=>v.startsWith("=")).length,[grid]);
+  const calculatedGrid=useMemo(()=>evaluateWorkbook(grid),[grid]);
+  const formulaCount=useMemo(()=>grid.flat().filter(v=>v.startsWith("=")).length,[grid]);
   async function openFile(){setBusy(true);try{const d=await invoke<Opened|null>("open_document");if(!d)return;setDoc(d.content);setFile(d.name);setPath(d.path);setPage("Writer");setPreview(false);setNotice("Opened "+d.name);}catch(e){setNotice(String(e));}finally{setBusy(false);}}
   async function saveContent(content:string,name:string,forceDialog=false){setBusy(true);try{const result=await invoke<string|null>("save_document",{path:forceDialog?null:(path||null),content});if(result){setPath(result);setFile(result.split(/[\\/]/).pop()||name);setNotice("Saved successfully");}}catch(e){setNotice(String(e));}finally{setBusy(false);}}
   function newDocument(){setDoc("# Untitled document\n\n");setFile("");setPath("");setPage("Writer");setPreview(false);setNotice("New document");}
