@@ -1,6 +1,7 @@
 param(
   [string]$ModelPath = "",
-  [string]$PythonInstallerPath = ""
+  [string]$PythonInstallerPath = "",
+  [string]$WebView2InstallerPath = ""
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
@@ -16,6 +17,10 @@ if ($PythonInstallerPath) {
   if (-not (Test-Path $PythonInstallerPath)) { throw "Python installer not found: $PythonInstallerPath" }
   Copy-Item $PythonInstallerPath (Join-Path $bundle "python-installer.exe") -Force
 }
+if ($WebView2InstallerPath) {
+  if (-not (Test-Path $WebView2InstallerPath)) { throw "WebView2 installer not found: $WebView2InstallerPath" }
+  Copy-Item $WebView2InstallerPath (Join-Path $bundle "WebView2-Offline-Installer.exe") -Force
+}
 if ($ModelPath) {
   if (-not (Test-Path $ModelPath)) { throw "Model file not found: $ModelPath" }
   if ([IO.Path]::GetExtension($ModelPath) -ne ".litertlm") { throw "Model must use the .litertlm format" }
@@ -28,7 +33,7 @@ AI Agent Office offline runtime payload
 - wheels/: LiteRT-LM Python package and dependencies for this Windows/Python version.
 - models/: optional .litertlm model files supplied during preparation.
 - python-installer.exe: optional official Python installer supplied by the packager.
-Run scripts\install-offline.ps1 from the project folder after installing AI Agent Office.
+Run Install-AI-Agent-Office-Offline.ps1 to install WebView2 (if supplied), AI Agent Office and LiteRT-LM offline.
 This payload is platform/Python-version specific; prepare it on Windows for the target architecture.
 "@ | Set-Content (Join-Path $bundle "OFFLINE-README.txt") -Encoding UTF8
 Copy-Item (Join-Path $PSScriptRoot "install-offline.ps1") (Join-Path $bundle "Install-LiteRTLM-Offline.ps1") -Force
