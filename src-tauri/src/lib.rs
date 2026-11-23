@@ -2,6 +2,7 @@ use serde::Serialize;
 #[cfg(windows)] use std::os::windows::ffi::OsStrExt;
 use std::{fs,path::PathBuf,process::Command};
 use tauri_plugin_dialog::DialogExt;
+#[cfg(windows)] const DRIVE_REMOVABLE: u32 = 2;
 #[derive(Serialize)] struct OpenedDocument{name:String,path:String,content:String}
 #[tauri::command] async fn open_document(app:tauri::AppHandle)->Result<Option<OpenedDocument>,String>{let Some(p)=app.dialog().file().blocking_pick_file()else{return Ok(None)};let path:PathBuf=p.into_path().map_err(|e|e.to_string())?;let m=fs::metadata(&path).map_err(|e|e.to_string())?;if m.len()>20*1024*1024{return Err("Text file exceeds 20 MB".into())}let content=fs::read_to_string(&path).map_err(|e|e.to_string())?;let name=path.file_name().and_then(|n|n.to_str()).unwrap_or("Document").to_string();Ok(Some(OpenedDocument{name,path:path.to_string_lossy().into_owned(),content}))}
 #[tauri::command] async fn save_document(app:tauri::AppHandle,path:Option<String>,content:String)->Result<Option<String>,String>{let target=if let Some(p)=path{PathBuf::from(p)}else{let Some(p)=app.dialog().file().blocking_save_file()else{return Ok(None)};p.into_path().map_err(|e|e.to_string())?};if content.len()>20*1024*1024{return Err("Document exceeds 20 MB".into())}fs::write(&target,content.as_bytes()).map_err(|e|e.to_string())?;Ok(Some(target.to_string_lossy().into_owned()))}
@@ -21,7 +22,7 @@ fn list_removable_drives() -> Result<Vec<RemovableDrive>, String> {
             let root = format!("{}:\\", letter);
             let wide: Vec<u16> = std::ffi::OsStr::new(&root).encode_wide().chain(Some(0)).collect();
             let kind = unsafe { windows_sys::Win32::Storage::FileSystem::GetDriveTypeW(wide.as_ptr()) };
-            if kind == windows_sys::Win32::Storage::FileSystem::DRIVE_REMOVABLE {
+            if kind == DRIVE_REMOVABLE {
                 drives.push(RemovableDrive { root: root.clone(), label: format!("Removable storage ({})", root.trim_end_matches('\\')) });
             }
         }
@@ -39,7 +40,7 @@ fn save_to_usb(drive_root: String, filename: String, content: String) -> Result<
         }
         let wide: Vec<u16> = std::ffi::OsStr::new(&drive_root).encode_wide().chain(Some(0)).collect();
         let kind = unsafe { windows_sys::Win32::Storage::FileSystem::GetDriveTypeW(wide.as_ptr()) };
-        if kind != windows_sys::Win32::Storage::FileSystem::DRIVE_REMOVABLE {
+        if kind != DRIVE_REMOVABLE {
             return Err("The selected drive is no longer detected as removable storage".into());
         }
         if content.len() > 20 * 1024 * 1024 { return Err("Export exceeds the 20 MB safety limit".into()); }
