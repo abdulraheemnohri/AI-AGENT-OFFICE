@@ -11,7 +11,7 @@ New-Item -ItemType Directory -Force -Path $wheels | Out-Null
 $python = Get-Command python -ErrorAction SilentlyContinue
 if (-not $python) { throw "Python 3 is required on the preparation PC. Install Python 3.10+ first." }
 Write-Host "Downloading LiteRT-LM and all wheel dependencies for offline installation..."
-& python -m pip download -r (Join-Path $root "requirements-litertlm.txt") --dest $wheels
+& python -m pip download -r (Join-Path $root "requirements-litertlm.txt") --only-binary=:all: --dest $wheels
 if ($LASTEXITCODE -ne 0) { throw "pip download failed" }
 if ($PythonInstallerPath) {
   if (-not (Test-Path $PythonInstallerPath)) { throw "Python installer not found: $PythonInstallerPath" }
