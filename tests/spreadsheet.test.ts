@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { columnIndex, evaluateWorkbook, parseCellAddress } from "../src/lib/spreadsheet";
+import { columnIndex, columnLabel, evaluateWorkbook, parseCellAddress } from "../src/lib/spreadsheet";
 
 describe("spreadsheet address helpers", () => {
-  it("converts spreadsheet columns", () => { expect(columnIndex("A")).toBe(0); expect(columnIndex("Z")).toBe(25); expect(columnIndex("AA")).toBe(26); });
+  it("converts spreadsheet columns in both directions", () => { expect(columnIndex("A")).toBe(0); expect(columnIndex("Z")).toBe(25); expect(columnIndex("AA")).toBe(26); expect(columnLabel(0)).toBe("A"); expect(columnLabel(25)).toBe("Z"); expect(columnLabel(26)).toBe("AA"); expect(columnLabel(701)).toBe("ZZ"); });
   it("parses absolute and relative cell addresses", () => { expect(parseCellAddress("$BC$12")).toEqual({ row: 11, col: 54 }); expect(parseCellAddress("A0")).toBeNull(); });
 });
 describe("spreadsheet formula engine", () => {
