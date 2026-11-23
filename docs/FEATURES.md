@@ -1,51 +1,51 @@
 # Implemented capabilities and honest status
 
-This document distinguishes working foundation features from planned integrations.
+## Desktop foundation
+- Windows desktop application shell built with Tauri 2, React and TypeScript.
+- Local dashboard and navigation for Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes, Devices & Printing, Data & Backup and Settings.
+- Local browser-profile persistence for workbook cells, slide outlines, task list, model chat history and preferences.
+- Light, dark and system theme; compact/comfortable density; editor font size; spell-check toggle and English/Urdu language hint; default text format.
+- Configurable autosave delay and restore confirmation; destructive workspace reset with explicit confirmation.
 
-## Working in this branch
-- Windows desktop shell built with Tauri 2, React and TypeScript.
-- Module navigation and dashboard.
-- UTF-8 text/Markdown Writer with edit/preview, word and character counts, find/replace-all, native open/save dialogs, and optional local recovery snapshot.
-- CSV grid editor with quoted-field parsing and escaping, import, cell editing, row extension, and CSV export.
-- Presentation outline editor with slide add/delete/edit and Markdown outline export.
-- Local task checklist and deterministic safe-plan template. It does not invoke an LLM, run commands, or modify external files.\n- Local persistence for spreadsheet contents, slide outlines and task lists in the desktop WebView profile.
-- Local preferences for theme, editor font size, autosave recovery, offline preference, telemetry preference and default format.
-- Runtime compatibility catalog with clear "planned" status.
+## Writer and document formats
+- UTF-8 text/Markdown editor, edit/preview, word/character counts, find/replace-all, native Windows open/save.
+- Basic DOCX text import through Mammoth. Formatting and layout are not preserved.
+- Basic DOCX export with headings, paragraphs and bullet lists.
+- Basic RTF export. RTF import and rich formatting round-trip are not implemented.
 
-## Not implemented yet
-- Native DOCX/ODT/RTF rich document editing; XLSX/XLS/ODS, formulas, charts and pivot tables; PPTX/PPT/ODP slide rendering; PDF rendering/annotation/OCR.
-- Local model inference, model downloads, runtime adapters, embeddings, RAG, speech, vision or AI chat.
-- Agent tool execution, workflow triggers, scheduler, background services, plugin/connector system.
-- Enforced network isolation, native overwrite confirmation, cloud sync or multi-device collaboration.
+## Sheets and presentations
+- CSV import/export, quoted fields, multiline values, cell editing, row/column extension and basic formula engine.
+- XLSX first-worksheet import and single-sheet XLSX export. Other worksheets, formatting, charts, pivot tables and macros are not preserved.
+- Slide outline editing, slide move up/down, duplicate and delete.
+- PPTX import extracts slide text; PPTX export creates simple editable title/body slides. Visual layout, media, transitions and speaker-note fidelity are not preserved.
 
-## Format policy
-The current Writer edits UTF-8 text formats only. CSV is the only spreadsheet import/export format. Slides export to Markdown outline only. Do not rename these exports to DOCX, XLSX or PPTX; those formats require real format engines.
-\n\n## Windows device integration\n- Printer: invokes the WebView/Windows print dialog; printer selection, copies and driver features are handled by Windows. Print stylesheet supports configured A4/Letter, portrait/landscape and margins.\n- USB: enumerates Windows removable logical drives and allows exporting the current Markdown/text document or CSV workbook to the drive root. Exports are size-limited to 20 MB, filenames are sanitized, and existing files are never overwritten.\n- USB limitations: only drives reported by Windows as `DRIVE_REMOVABLE` are shown. Some USB external HDD/SSD devices report `DRIVE_FIXED` and are intentionally not listed by this implementation. No arbitrary USB HID, serial, camera or phone/MTP device access is implemented.\n
+## PDF Studio
+- Local PDF preview using the Windows WebView PDF viewer.
+- Merge PDFs, extract selected pages, rotate, delete, reorder, duplicate and insert blank pages.
+- Add a simple text stamp to the selected page and download the edited PDF.
+- PDF OCR, signatures, interactive form fields, freehand/highlight annotations, redaction and full layout editing are not implemented.
 
-## PC file transfer and workspace backup
-- Open local PC text/Markdown files through the native file picker and save/export the current Writer document to a chosen PC path.
-- Import/export CSV workbooks and export presentation outlines as Markdown.
-- Export a versioned JSON backup containing Writer document, CSV grid, slide outline, tasks, preferences and recovery data.
-- Restore validates schema and section types before applying the backup. Restore replaces the current workspace data, not arbitrary files on the PC.
-- JSON backup import limit is 20 MB; the native text-file picker also enforces a 20 MB file limit.
+## AI and device integration
+- Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU selection, runtime check, local prompt/response and persisted local chat history.
+- LiteRT-LM Python package and model weights are not embedded in the default application installer. Use the offline preparation scripts to assemble an offline payload.
+- AI Agent page is a local task checklist and deterministic safe-plan template; it does not execute commands or operate on the PC.
+- Printer action opens the Windows/WebView print dialog and uses the configured page size, orientation and margins.
+- Windows USB detection lists drives classified as DRIVE_REMOVABLE. Export current text document, CSV or full JSON workspace backup. Some external USB drives report DRIVE_FIXED and are not listed. No USB serial/HID/camera/MTP support.
 
-## Google LiteRT-LM integration
-- Native Tauri command bridge calls Google's litert_lm Python API using a local .litertlm model path.
-- Supports CPU and GPU backend selection, runtime availability check, model-file picker and local text prompt/response.
-- Long inference runs on a blocking worker thread, not the UI thread.
-- The runtime bridge is implemented; the Python package and model are not embedded in the installer by default. Use the offline wheel payload scripts to prepare them.
+## Data portability and offline deployment
+- PC open/save/import/export actions for supported formats.
+- Versioned JSON workspace backup/restore includes document, workbook, slides, tasks, preferences, model configuration/history and recovery data.
+- Autosave recovery now snapshots the full workspace, not only the Writer document.
+- Backup restore validates schema and data sections before applying; 20 MB import limit.
+- Windows scripts prepare local Python wheels, optional Python/WebView2/model installers and application installer packaging. The output still requires clean-machine offline verification.
 
-## Offline distribution
-- scripts/prepare-offline.ps1 downloads Python wheel dependencies on a preparation PC and optionally includes Python installer/model payloads.
-- scripts/install-offline.ps1 installs LiteRT-LM from local wheels only (--no-index).
-- scripts/package-offline.ps1 builds the Windows Tauri installer and packages the app installer with the offline runtime payload.
-- The offline bundle is Windows/architecture/Python-version specific. The application can run without a network connection after installation; model acquisition and payload preparation happen before moving the bundle to an offline PC.
+## Not implemented / next milestones
+- Full-fidelity DOCX editor, ODT/ODS/ODP/RTF import and complete format round-trip.
+- Multi-sheet XLSX editor, advanced formulas, charts, pivot tables and workbook styling.
+- Visual PowerPoint canvas, full PPTX import fidelity and animation/media editing.
+- PDF OCR, annotation suite, signatures, forms, redaction and page thumbnails.
+- Built-in offline speech, vision, document RAG, embeddings and model manager with download/checksum/unload.
+- Real agent tool execution, permission scopes, approval gates, workflow builder and audit log.
+- Enforced network isolation, encrypted/scheduled backups, portable runtime/model installer validation and signed production releases.
 
-
-## Office file-format milestone
-- DOCX: import text with Mammoth and export basic Word documents with headings, paragraphs and bullet lists. Formatting/layout fidelity and full DOCX editing are not supported.
-- XLSX: import the first worksheet and export a single worksheet. Cell values and formula expressions are transferred; this app's own formula engine remains the calculation authority.
-- PPTX: export the slide outline to editable PowerPoint title/body slides. Existing PPTX import and visual slide editing are not implemented.
-- PDF: local preview through the Windows WebView PDF viewer; merge multiple PDFs, extract selected pages, rotate or delete pages, add a simple text stamp and download edited PDF.
-- PDF OCR, digital signatures, interactive form fields, freehand/highlight annotation, and full layout editing remain pending.
-- All imported office files are processed locally in the WebView. No cloud conversion service is used.
+All document conversion and editing described above is performed locally in the app. Features are only considered complete when implementation and automated tests are present; Windows hardware/installer validation remains separate.
