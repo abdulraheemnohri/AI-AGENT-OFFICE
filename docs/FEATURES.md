@@ -24,8 +24,8 @@
 ## PDF Studio
 - Local PDF preview using the Windows WebView PDF viewer.
 - Merge PDFs, extract selected pages, rotate, delete, reorder, duplicate and insert blank pages.
-- Add a simple text stamp to the selected page and download the edited PDF.
-- PDF OCR, signatures, interactive form fields, freehand/highlight annotations, redaction and full layout editing are not implemented.
+- Add a simple text stamp, flattened rectangular yellow highlight and flattened note box to the selected page. Annotation geometry uses page-relative percentage coordinates from the top-left.
+- These highlights and note boxes are drawn into page content and are not editable PDF comment annotations. PDF OCR, signatures, interactive form fields, freehand ink, redaction and full layout editing are not implemented.
 
 ## AI and device integration
 - Google LiteRT-LM Python API bridge for a local .litertlm model, CPU/GPU/NPU backend selection (NPU is hardware/runtime dependent), configurable thinking mode, thinking-token budget, output-token limit, optional speculative decoding/MTP, runtime check, local prompt/response and persisted local chat history.
