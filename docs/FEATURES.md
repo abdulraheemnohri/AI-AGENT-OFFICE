@@ -50,6 +50,6 @@
 - PDF OCR, native comment annotations, certificate-based signatures, secure redaction and page thumbnails.
 - Built-in offline speech, vision, document RAG, embeddings and model manager with download/checksum/unload.
 - Real agent tool execution, permission scopes, approval gates, workflow builder and audit log.
-- Enforced network isolation, encrypted/scheduled backups, portable runtime/model installer validation and signed production releases.
+- Enforced network isolation, scheduled backups, portable runtime/model installer validation and signed production releases.\n- Password-protected workspace backup export/import is implemented using PBKDF2-SHA256 (310,000 iterations) and authenticated AES-256-GCM. Passwords are entered per operation and never persisted. Encrypted restore authenticates/decrypts first, then validates the normal versioned workspace schema before applying it.
 
 All document conversion and editing described above is performed locally in the app. Features are only considered complete when implementation and automated tests are present; Windows hardware/installer validation remains separate.
