@@ -71,6 +71,30 @@ export async function exportPptx(slides: { title: string; body: string }[]): Pro
   return await pptx.write({ outputType: "blob" }) as Blob;
 }
 
+
+function decodeXmlText(value: string): string {
+  return value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+}
+
+export async function importPptx(bytes: ArrayBuffer): Promise<{ title: string; body: string }[]> {
+  const zip = await JSZip.loadAsync(bytes);
+  const paths = Object.keys(zip.files).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+    .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1] || 0) - Number(b.match(/slide(\d+)/)?.[1] || 0));
+  if (!paths.length) throw new Error("The PowerPoint file contains no readable slides");
+  const slides: { title: string; body: string }[] = [];
+  for (const path of paths) {
+    const file = zip.file(path);
+    if (!file) continue;
+    const xml = await file.async("text");
+    const paragraphs = [...xml.matchAll(/<a:p(?:\s[^>]*)?>([\s\S]*?)<\/a:p>/g)].map((match) =>
+      [...match[1].matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)].map((part) => decodeXmlText(part[1])).join("")
+    ).map((line) => line.trim()).filter(Boolean);
+    const useful = paragraphs.filter((line) => line !== "Created with AI Agent Office");
+    slides.push({ title: useful[0] || "Untitled slide", body: useful.slice(1).join("\n") });
+  }
+  return slides;
+}
+
 export async function pdfPageCount(bytes: Uint8Array): Promise<number> {
   const doc = await PDFDocument.load(bytes, { ignoreEncryption: false });
   return doc.getPageCount();
