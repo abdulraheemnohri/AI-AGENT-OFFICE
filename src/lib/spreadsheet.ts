@@ -2,7 +2,7 @@ export type CellValue = number | string;
 export type Workbook = string[][];
 
 const cellPattern = /^\$?([A-Z]{1,3})\$?([1-9]\d*)$/i;
-export function columnIndex(label: string): number {
+export function columnLabel(index: number): string {\n  if (!Number.isInteger(index) || index < 0) throw new Error("Column index must be a non-negative integer");\n  let n = index + 1; let label = "";\n  while (n > 0) { const rem = (n - 1) % 26; label = String.fromCharCode(65 + rem) + label; n = Math.floor((n - 1) / 26); }\n  return label;\n}\nexport function columnIndex(label: string): number {
   let n = 0;
   for (const ch of label.toUpperCase()) n = n * 26 + ch.charCodeAt(0) - 64;
   return n - 1;
