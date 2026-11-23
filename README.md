@@ -1,17 +1,51 @@
 # AI AGENT OFFICE
 
-Offline-first Windows 10/11 x64 office suite. Current status: initial foundation scaffold, not a completed office suite. This branch contains the desktop shell, local settings, basic UTF-8 text open/save, model catalog metadata, build configuration and product roadmap.
+Offline-first Windows desktop productivity workspace built with Tauri 2, React, TypeScript and Rust.
 
-Requirements: Windows 10/11 x64, Node.js 20+, Rust stable MSVC, Visual Studio C++ Build Tools, Windows SDK and WebView2.
+> **Status:** foundation expansion. This is not yet a full Microsoft Office replacement or a complete AI agent. See [implemented features](docs/FEATURES.md) and [roadmap](docs/ROADMAP.md).
 
-Development:
+## Working features in this branch
+- Dashboard and navigation across Writer, Sheets, Slides, PDF Studio, AI Agent, Models & Runtimes and Settings.
+- Writer for UTF-8 plain text and Markdown, with edit/preview, word and character counts, find/replace-all, native open/save and optional local recovery snapshot.
+- CSV spreadsheet grid with quoted CSV import, cell editing, row extension and CSV export.
+- Presentation outline editor with slide add/delete/edit and Markdown outline export.
+- Local task checklist and safe-plan template (deterministic; no AI inference or system command execution).
+- Locally persisted UI preferences: theme, editor font size, autosave recovery, offline preference and telemetry preference.
 
-    npm install
-    npm run tauri:dev
+## Not yet implemented
+Native DOCX/ODT/RTF, XLSX/XLS/ODS, PPTX/PPT/ODP and PDF engines; spreadsheet formulas/charts; PDF rendering/OCR; local model inference and runtime adapters; model downloads; agent tool execution and workflow automation. Settings such as offline-only and telemetry are preferences only and do not enforce network isolation. No installer has been built or verified by this repository update.
 
-Build installer:
+## Windows requirements
+- Windows 10/11 x64
+- Node.js 20+
+- Rust stable with MSVC toolchain
+- Visual Studio Build Tools with C++ workload and Windows SDK
+- WebView2 Runtime
 
-    npm test
-    npm run tauri:build
+## Development
 
-See docs/ for feature inventory, architecture, settings and runtime plan.
+```powershell
+git clone -b development https://github.com/abdulraheemnohri/AI-AGENT-OFFICE.git
+cd AI-AGENT-OFFICE
+npm install
+npm run tauri:dev
+```
+
+## Tests and installer build
+
+```powershell
+npm run test
+npm run tauri:build
+```
+
+Expected bundle output: `src-tauri/target/release/bundle`. These commands have not been executed in this update; build on Windows to verify your toolchain and installer output.
+
+## Documentation
+- [Feature status](docs/FEATURES.md)
+- [Settings behavior](docs/SETTINGS.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Runtime catalog](docs/RUNTIMES.md)
+- [Delivery roadmap](docs/ROADMAP.md)
+
+## Project principles
+Local-first, no mandatory account, no subscription requirement. Donation support can be added as an optional funding channel without blocking core offline functionality.
