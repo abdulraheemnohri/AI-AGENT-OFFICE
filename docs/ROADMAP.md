@@ -15,3 +15,8 @@ A milestone is complete only when code, tests and documentation exist.
 - Implemented a local Google LiteRT-LM Python API bridge with CPU/GPU selection; runtime/model assets remain a separate offline payload.
 - Added Windows offline payload preparation, local-wheel installation and installer packaging scripts.
 - Still required for a truly self-contained offline installer: bundle a tested Python runtime, LiteRT-LM native dependencies, and licensed model weights; verify on a clean Windows machine without internet.
+
+## Office format implementation update
+- Added DOCX text import and basic DOCX export, XLSX first-sheet import/export, PPTX title/body export, and PDF merge/extract/rotate/delete/text-stamp workflows.
+- Added automated format tests for DOCX, XLSX, PPTX and PDF operations.
+- Remaining format fidelity work: DOCX style/layout round-trip, XLSX multiple sheets/styles/charts/pivots, PPTX import/canvas editor, ODT/ODS/ODP/RTF and PDF OCR/forms/signatures/annotation.
