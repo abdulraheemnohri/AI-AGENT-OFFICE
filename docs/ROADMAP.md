@@ -43,7 +43,7 @@ Legend: [x] implemented in the repository; [ ] remaining or not yet verified. Ba
 - [ ] Full spreadsheet formatting and Office round-trip: borders, font size/family, row/column styles and XLSX/ODS style preservation.\n- [x] Initial per-cell formatting: bold, italic, underline, alignment, wrapping, fill/text color and calculated-value number/PKR/percent/date display; local persistence and plain/encrypted backup restore.
 - [x] Per-column dropdown data validation: persisted allowed values, in-cell suggestions, invalid-value rejection, formula/blank exemptions, and inclusion in plain/encrypted backups and autosave recovery.
 - [x] Numeric/date validation bounds and configurable blank handling: per-column numeric/date type, inclusive min/max, blank policy, formula exemption, persistence and backup/restore.
-- [x] Initial editable chart builder: bar, line and pie charts using MIT Recharts, worksheet-local definitions, formula-result data, responsive rendering and workspace backup/restore.\n- [ ] Chart export (SVG/PNG), chart objects in XLSX/ODS, advanced chart formatting, more Excel-compatible formulas, named ranges and conditional formatting.
+- [x] Initial editable chart builder: bar, line and pie charts using MIT Recharts, worksheet-local definitions, formula-result data, responsive rendering and workspace backup/restore.\n- [x] Export chart as standalone SVG.\n- [ ] PNG export, chart objects in XLSX/ODS, advanced chart formatting, more Excel-compatible formulas, named ranges and conditional formatting.
 - [ ] Freeze panes, pivot tables and advanced XLSX formatting compatibility.
 - [ ] Visual slide canvas, shapes, images, themes, notes, transitions and media.
 - [ ] Higher-fidelity PPTX/ODP import/export and undo/redo.
