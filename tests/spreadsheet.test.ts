@@ -118,3 +118,28 @@ describe("spreadsheet numeric and date validation", () => {
       .toEqual({ "0": { type: "number", min: 1, max: 5, allowBlank: false }, "1": { type: "date", min: "2026-01-01", allowBlank: true } });
   });
 });
+
+
+describe("spreadsheet cell formatting", () => {
+  it("sanitizes cell formatting and rejects malformed keys and unsafe colors", async () => {
+    const { sanitizeCellFormats } = await import("../src/lib/spreadsheet");
+    expect(sanitizeCellFormats({
+      "0:0": { bold: true, italic: false, align: "center", numberFormat: "currency", fillColor: "#aabbcc", textColor: "red", wrap: true },
+      "1:2": { underline: true, align: "diagonal", fillColor: "url(javascript:alert(1))" },
+      "-1:0": { bold: true },
+      "2:3": "invalid"
+    })).toEqual({
+      "0:0": { bold: true, italic: false, align: "center", numberFormat: "currency", fillColor: "#AABBCC", wrap: true },
+      "1:2": { underline: true }
+    });
+    expect(sanitizeCellFormats(null)).toEqual({});
+  });
+
+  it("formats numeric display values without changing source cell values", async () => {
+    const { formatCellDisplay } = await import("../src/lib/spreadsheet");
+    expect(formatCellDisplay(0.25, { numberFormat: "percent" })).toBe("25%");
+    expect(formatCellDisplay(1234.5, { numberFormat: "number" })).toContain("1,234.5");
+    expect(formatCellDisplay("not numeric", { numberFormat: "currency" })).toBe("not numeric");
+    expect(formatCellDisplay(42, { numberFormat: "general" })).toBe("42");
+  });
+});
