@@ -66,6 +66,15 @@ describe("spreadsheet row and column editing", () => {
   });
 });
 
+describe("spreadsheet validation backup normalization", () => {
+  it("keeps only bounded, valid column dropdown lists from imported data", async () => {
+    const { sanitizeColumnValidations } = await import("../src/lib/spreadsheet");
+    expect(sanitizeColumnValidations({ "0": [" Open ", "Done", "Open"], "2": ["A".repeat(2)], "-1": ["bad"], "x": ["bad"], "3": "bad" }))
+      .toEqual({ "0": ["Open", "Done"], "2": ["AA"] });
+    expect(sanitizeColumnValidations(null)).toEqual({});
+  });
+});
+
 describe("spreadsheet dropdown validation", () => {
   it("accepts allowed values case-insensitively and permits blanks by default", async () => {
     const { validateCellValue } = await import("../src/lib/spreadsheet");
