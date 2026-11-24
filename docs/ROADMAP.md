@@ -44,7 +44,7 @@ Legend: [x] implemented in the repository; [ ] remaining or not yet verified. Ba
 - [x] Per-column dropdown data validation: persisted allowed values, in-cell suggestions, invalid-value rejection, formula/blank exemptions, and inclusion in plain/encrypted backups and autosave recovery.
 - [x] Numeric/date validation bounds and configurable blank handling: per-column numeric/date type, inclusive min/max, blank policy, formula exemption, persistence and backup/restore.
 - [x] Initial editable chart builder: bar, line and pie charts using MIT Recharts, worksheet-local definitions, formula-result data, responsive rendering and workspace backup/restore.\n- [x] Export chart as standalone SVG.\n- [ ] PNG export, chart objects in XLSX/ODS, advanced chart formatting, more Excel-compatible formulas and named ranges.
-- [x] Initial conditional formatting: per-column numeric and text rules, configurable colors, first-match priority and worksheet-specific persistence/backup.\n- [ ] Freeze panes, pivot tables and advanced XLSX formatting compatibility.
+- [x] Initial conditional formatting: per-column numeric and text rules, configurable colors, first-match priority and worksheet-specific persistence/backup.\n- [x] Basic freeze panes: optional frozen top data row and first worksheet column, with workspace persistence and backup/restore.\n- [ ] Pivot tables and advanced XLSX formatting compatibility.
 - [ ] Visual slide canvas, shapes, images, themes, notes, transitions and media.
 - [ ] Higher-fidelity PPTX/ODP import/export and undo/redo.
 
