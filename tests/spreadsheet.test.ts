@@ -124,13 +124,13 @@ describe("spreadsheet cell formatting", () => {
   it("sanitizes cell formatting and rejects malformed keys and unsafe colors", async () => {
     const { sanitizeCellFormats } = await import("../src/lib/spreadsheet");
     expect(sanitizeCellFormats({
-      "0:0": { bold: true, italic: false, align: "center", numberFormat: "currency", fillColor: "#aabbcc", textColor: "red", wrap: true },
-      "1:2": { underline: true, align: "diagonal", fillColor: "url(javascript:alert(1))" },
-      "-1:0": { bold: true },
-      "2:3": "invalid"
+      "0:0:0": { bold: true, italic: false, align: "center", numberFormat: "currency", fillColor: "#aabbcc", textColor: "red", wrap: true },
+      "0:1:2": { underline: true, align: "diagonal", fillColor: "url(javascript:alert(1))" },
+      "0:-1:0": { bold: true },
+      "0:2:3": "invalid"
     })).toEqual({
-      "0:0": { bold: true, italic: false, align: "center", numberFormat: "currency", fillColor: "#AABBCC", wrap: true },
-      "1:2": { underline: true }
+      "0:0:0": { bold: true, italic: false, align: "center", numberFormat: "currency", fillColor: "#AABBCC", wrap: true },
+      "0:1:2": { underline: true }
     });
     expect(sanitizeCellFormats(null)).toEqual({});
   });
