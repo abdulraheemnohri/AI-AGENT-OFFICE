@@ -258,7 +258,7 @@ export function sanitizeCellFormats(value: unknown): Record<string, CellFormat> 
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const result: Record<string, CellFormat> = {};
   for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
-    if (!/^(0|[1-9]\\d{0,2}):(0|[1-9]\\d{0,4}):(0|[1-9]\\d{0,3})$/.test(key) || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    if (!/^(0|[1-9]\d{0,2}):(0|[1-9]\d{0,4}):(0|[1-9]\d{0,3})$/.test(key) || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
     const item = raw as Record<string, unknown>;
     const format: CellFormat = {};
     if (typeof item.bold === "boolean") format.bold = item.bold;
