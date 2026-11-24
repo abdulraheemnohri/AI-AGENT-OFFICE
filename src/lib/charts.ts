@@ -25,7 +25,7 @@ export function sanitizeWorkbookCharts(value: unknown): Record<string, WorkbookC
       if (item.kind !== "bar" && item.kind !== "line" && item.kind !== "pie") continue;
       if (!Number.isInteger(item.categoryColumn) || (item.categoryColumn as number) < 0 || (item.categoryColumn as number) > 999) continue;
       if (!Array.isArray(item.valueColumns)) continue;
-      const valueColumns = [...new Set(item.valueColumns.filter((column): column is number => Number.isInteger(column) && column >= 0 && column <= 999))].slice(0, 20);
+      const valueColumns = [...new Set(item.valueColumns.filter((column): column is number => typeof column === "number" && Number.isInteger(column) && column >= 0 && column <= 999))].slice(0, 20);
       if (!valueColumns.length) continue;
       charts.push({
         id: item.id,
