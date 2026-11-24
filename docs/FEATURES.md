@@ -56,3 +56,4 @@
 All document conversion and editing described above is performed locally in the app. Features are only considered complete when implementation and automated tests are present; Windows hardware/installer validation remains separate.
 - Per-column dropdown data validation with persisted allowed-value lists, in-cell suggestions, invalid-value rejection and formula/blank exemptions.
 \n- Dropdown validation rules are included in plain and encrypted workspace backups and autosave recovery; imported rule data is normalized to safe column indexes and at most 100 unique non-empty options per column.\n
+- Per-column numeric and ISO-date validation supports optional inclusive minimum/maximum bounds, configurable blank handling, formula exemption, persistence and workspace backup/restore.
