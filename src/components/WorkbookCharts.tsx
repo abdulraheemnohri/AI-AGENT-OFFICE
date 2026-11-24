@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis
@@ -21,6 +21,20 @@ export function WorkbookCharts({ workbook, calculated, charts, onChange }: Props
   const [categoryColumn, setCategoryColumn] = useState(0);
   const [valueColumns, setValueColumns] = useState<number[]>([1]);
   const columnCount = Math.max(1, 8, ...workbook.map(row => row.length));
+  const chartRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const exportChartSvg = (id: string, chartTitle: string) => {
+    const svg = chartRefs.current[id]?.querySelector("svg");
+    if (!svg) return;
+    const copy = svg.cloneNode(true) as SVGSVGElement;
+    copy.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    const source = new XMLSerializer().serializeToString(copy);
+    const url = URL.createObjectURL(new Blob([source], { type: "image/svg+xml;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = (chartTitle.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, 60) || "chart") + ".svg";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
   const columns = Array.from({ length: Math.min(columnCount, 100) }, (_, index) => ({
     value: index,
     label: String(workbook[0]?.[index] || columnLabel(index)).slice(0, 32)
@@ -56,8 +70,8 @@ export function WorkbookCharts({ workbook, calculated, charts, onChange }: Props
       {charts.map(chart => {
         const data = buildWorkbookChartData(workbook, calculated, chart);
         return <article key={chart.id} style={{ minWidth: 0, padding: 12, border: "1px solid var(--border, #343a46)", borderRadius: 10, background: "var(--surface, #10141b)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}><h3 style={{ margin: 0, fontSize: 14 }}>{chart.title}</h3><button type="button" className="secondary" onClick={() => onChange(charts.filter(item => item.id !== chart.id))}>Remove</button></div>
-          {data.length === 0 ? <p style={{ padding: 30, textAlign: "center", opacity: .7 }}>No numeric values to chart. Check the selected columns.</p> : <div style={{ width: "100%", height: 280, marginTop: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}><h3 style={{ margin: 0, fontSize: 14 }}>{chart.title}</h3><div style={{display:"flex",gap:6}}><button type="button" className="secondary" onClick={() => exportChartSvg(chart.id,chart.title)}>Export SVG</button><button type="button" className="secondary" onClick={() => onChange(charts.filter(item => item.id !== chart.id))}>Remove</button></div></div>
+          {data.length === 0 ? <p style={{ padding: 30, textAlign: "center", opacity: .7 }}>No numeric values to chart. Check the selected columns.</p> : <div ref={node => { chartRefs.current[chart.id] = node; }} style={{ width: "100%", height: 280, marginTop: 8 }}>
             <ResponsiveContainer width="100%" height="100%">
               {chart.kind === "bar" ? <BarChart data={data} margin={{ top: 10, right: 12, left: -12, bottom: 24 }}><CartesianGrid strokeDasharray="3 3" opacity={.2}/><XAxis dataKey="name" tick={{ fontSize: 11 }} interval="preserveStartEnd"/><YAxis tick={{ fontSize: 11 }}/><Tooltip/><Legend/>{chart.valueColumns.map((column, index) => <Bar key={column} dataKey={"series" + column} name={String(workbook[0]?.[column] || columnLabel(column))} fill={palette[index % palette.length]}/>)}</BarChart>
                 : chart.kind === "line" ? <LineChart data={data} margin={{ top: 10, right: 12, left: -12, bottom: 24 }}><CartesianGrid strokeDasharray="3 3" opacity={.2}/><XAxis dataKey="name" tick={{ fontSize: 11 }} interval="preserveStartEnd"/><YAxis tick={{ fontSize: 11 }}/><Tooltip/><Legend/>{chart.valueColumns.map((column, index) => <Line key={column} type="monotone" dataKey={"series" + column} name={String(workbook[0]?.[column] || columnLabel(column))} stroke={palette[index % palette.length]} strokeWidth={2} dot={false}/>)}</LineChart>
