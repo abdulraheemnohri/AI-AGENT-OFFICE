@@ -227,11 +227,11 @@ export function sanitizeColumnConstraints(value: unknown): Record<string, Numeri
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const result: Record<string, NumericDateValidationRule> = {};
   for (const [column, raw] of Object.entries(value as Record<string, unknown>)) {
-    if (!/^(0|[1-9]\\d{0,3})$/.test(column) || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    if (!/^(0|[1-9]\d{0,3})$/.test(column) || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
     const rule = raw as Record<string, unknown>;
     if (rule.type !== "number" && rule.type !== "date") continue;
-    const min = rule.type === "number" ? (typeof rule.min === "number" && Number.isFinite(rule.min) ? rule.min : undefined) : (typeof rule.min === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(rule.min) ? rule.min : undefined);
-    const max = rule.type === "number" ? (typeof rule.max === "number" && Number.isFinite(rule.max) ? rule.max : undefined) : (typeof rule.max === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(rule.max) ? rule.max : undefined);
+    const min = rule.type === "number" ? (typeof rule.min === "number" && Number.isFinite(rule.min) ? rule.min : undefined) : (typeof rule.min === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rule.min) ? rule.min : undefined);
+    const max = rule.type === "number" ? (typeof rule.max === "number" && Number.isFinite(rule.max) ? rule.max : undefined) : (typeof rule.max === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rule.max) ? rule.max : undefined);
     if (min !== undefined && max !== undefined && min > max) continue;
     result[column] = { type: rule.type, ...(min !== undefined ? { min } : {}), ...(max !== undefined ? { max } : {}), allowBlank: rule.allowBlank !== false };
   }
