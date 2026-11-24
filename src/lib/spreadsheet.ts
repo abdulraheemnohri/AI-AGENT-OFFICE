@@ -197,3 +197,43 @@ export function sanitizeColumnValidations(value: unknown): Record<string, string
   }
   return result;
 }
+
+export type NumericDateValidationRule = { type: "number" | "date"; min?: number | string; max?: number | string; allowBlank?: boolean };
+
+/** Validate numeric and ISO date cell values. Formula expressions are evaluated by the workbook engine. */
+export function validateNumericDateCellValue(value: string, rule?: NumericDateValidationRule): { valid: boolean; reason?: string } {
+  if (!rule || (rule.type !== "number" && rule.type !== "date")) return { valid: true };
+  const candidate = value.trim();
+  if (!candidate) return rule.allowBlank === false ? { valid: false, reason: "A value is required for this column." } : { valid: true };
+  if (candidate.startsWith("=")) return { valid: true };
+  if (rule.type === "number") {
+    const number = Number(candidate);
+    if (!Number.isFinite(number)) return { valid: false, reason: "Enter a valid number for this column." };
+    if (typeof rule.min === "number" && number < rule.min) return { valid: false, reason: "Value is below the column minimum of " + rule.min + "." };
+    if (typeof rule.max === "number" && number > rule.max) return { valid: false, reason: "Value is above the column maximum of " + rule.max + "." };
+    return { valid: true };
+  }
+  const date = new Date(candidate + "T00:00:00.000Z");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate) || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) {
+    return { valid: false, reason: "Enter a valid date in YYYY-MM-DD format." };
+  }
+  if (typeof rule.min === "string" && candidate < rule.min) return { valid: false, reason: "Date is earlier than the column minimum of " + rule.min + "." };
+  if (typeof rule.max === "string" && candidate > rule.max) return { valid: false, reason: "Date is later than the column maximum of " + rule.max + "." };
+  return { valid: true };
+}
+
+/** Sanitize per-column numeric/date constraints imported from workspace data. */
+export function sanitizeColumnConstraints(value: unknown): Record<string, NumericDateValidationRule> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result: Record<string, NumericDateValidationRule> = {};
+  for (const [column, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (!/^(0|[1-9]\\d{0,3})$/.test(column) || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const rule = raw as Record<string, unknown>;
+    if (rule.type !== "number" && rule.type !== "date") continue;
+    const min = rule.type === "number" ? (typeof rule.min === "number" && Number.isFinite(rule.min) ? rule.min : undefined) : (typeof rule.min === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(rule.min) ? rule.min : undefined);
+    const max = rule.type === "number" ? (typeof rule.max === "number" && Number.isFinite(rule.max) ? rule.max : undefined) : (typeof rule.max === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(rule.max) ? rule.max : undefined);
+    if (min !== undefined && max !== undefined && min > max) continue;
+    result[column] = { type: rule.type, ...(min !== undefined ? { min } : {}), ...(max !== undefined ? { max } : {}), allowBlank: rule.allowBlank !== false };
+  }
+  return result;
+}
