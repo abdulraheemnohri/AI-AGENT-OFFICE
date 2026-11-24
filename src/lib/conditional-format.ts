@@ -88,8 +88,10 @@ export function getConditionalCellStyle(
 ): ConditionalCellStyle {
   const rule = rules.find(item => item.column === column && matchesConditionalRule(value, item));
   if (!rule) return {};
+  const backgroundColor = validColor(rule.backgroundColor);
+  const color = validColor(rule.textColor);
   return {
-    ...(rule.backgroundColor ? { backgroundColor: rule.backgroundColor } : {}),
-    ...(rule.textColor ? { color: rule.textColor } : {})
+    ...(backgroundColor ? { backgroundColor } : {}),
+    ...(color ? { color } : {})
   };
 }
