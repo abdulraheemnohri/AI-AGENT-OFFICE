@@ -64,7 +64,8 @@ export default function App() {
       const restoredPdfCount=restoredPdf?await pdfPageCount(restoredPdf):0;
       setDoc(backup.data.document.content);setFile(backup.data.document.name);setPath("");
       setGridState(backup.data.workbook.cells);setSheetName(backup.data.workbook.name);setWorksheets(backup.data.workbook.sheets?.length?backup.data.workbook.sheets:[{name:backup.data.workbook.name,cells:backup.data.workbook.cells}]);setActiveWorksheet(0);
-      setSlides(backup.data.slides);setTasks(backup.data.tasks);\n      const restoredPrefs=backup.data.preferences as Partial<Prefs> & {sheetColumnValidations?:unknown;litertModelPath?:string;litertBackend?:"CPU"|"GPU"|"NPU";litertThinking?:boolean;litertThinkingBudget?:number;litertMaxOutputTokens?:number;litertMtp?:boolean;litertModelHistory?:{role:"user"|"assistant";content:string;at:number}[]};
+      setSlides(backup.data.slides);setTasks(backup.data.tasks);
+      const restoredPrefs=backup.data.preferences as Partial<Prefs> & {sheetColumnValidations?:unknown;litertModelPath?:string;litertBackend?:"CPU"|"GPU"|"NPU";litertThinking?:boolean;litertThinkingBudget?:number;litertMaxOutputTokens?:number;litertMtp?:boolean;litertModelHistory?:{role:"user"|"assistant";content:string;at:number}[]};
       setColumnValidations(sanitizeColumnValidations(restoredPrefs.sheetColumnValidations));setPrefs(sanitizePreferences(defaults,restoredPrefs));setModelPath(restoredPrefs.litertModelPath||"");
       setModelBackend(restoredPrefs.litertBackend==="GPU"||restoredPrefs.litertBackend==="NPU"?restoredPrefs.litertBackend:"CPU");
       setModelThinking(Boolean(restoredPrefs.litertThinking));
@@ -104,7 +105,8 @@ export default function App() {
       setDoc(backup.data.document.content);setFile(backup.data.document.name);setPath("");
       setGridState(backup.data.workbook.cells);setSheetName(backup.data.workbook.name);
       setWorksheets(backup.data.workbook.sheets?.length?backup.data.workbook.sheets:[{name:backup.data.workbook.name,cells:backup.data.workbook.cells}]);setActiveWorksheet(0);
-      setSlides(backup.data.slides);setTasks(backup.data.tasks);\n      const restoredPrefs=backup.data.preferences as Partial<Prefs>&{sheetColumnValidations?:unknown;litertModelPath?:string;litertBackend?:"CPU"|"GPU"|"NPU";litertThinking?:boolean;litertThinkingBudget?:number;litertMaxOutputTokens?:number;litertMtp?:boolean;litertModelHistory?:{role:"user"|"assistant";content:string;at:number}[]};
+      setSlides(backup.data.slides);setTasks(backup.data.tasks);
+      const restoredPrefs=backup.data.preferences as Partial<Prefs>&{sheetColumnValidations?:unknown;litertModelPath?:string;litertBackend?:"CPU"|"GPU"|"NPU";litertThinking?:boolean;litertThinkingBudget?:number;litertMaxOutputTokens?:number;litertMtp?:boolean;litertModelHistory?:{role:"user"|"assistant";content:string;at:number}[]};
       setPrefs(sanitizePreferences(defaults,restoredPrefs));setModelPath(restoredPrefs.litertModelPath||"");
       setModelBackend(restoredPrefs.litertBackend==="GPU"||restoredPrefs.litertBackend==="NPU"?restoredPrefs.litertBackend:"CPU");
       setModelThinking(Boolean(restoredPrefs.litertThinking));
