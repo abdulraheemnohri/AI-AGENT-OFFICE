@@ -237,3 +237,58 @@ export function sanitizeColumnConstraints(value: unknown): Record<string, Numeri
   }
   return result;
 }
+
+
+export type CellFormat = {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  align?: "left" | "center" | "right";
+  numberFormat?: "general" | "number" | "currency" | "percent" | "date";
+  fillColor?: string;
+  textColor?: string;
+  wrap?: boolean;
+};
+
+const safeHexColor = (value: unknown): string | undefined =>
+  typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) ? value.toUpperCase() : undefined;
+
+/** Normalize per-cell presentation metadata from local storage or imported backups. */
+export function sanitizeCellFormats(value: unknown): Record<string, CellFormat> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result: Record<string, CellFormat> = {};
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (!/^(0|[1-9]\\d{0,4}):(0|[1-9]\\d{0,3})$/.test(key) || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const item = raw as Record<string, unknown>;
+    const format: CellFormat = {};
+    if (typeof item.bold === "boolean") format.bold = item.bold;
+    if (typeof item.italic === "boolean") format.italic = item.italic;
+    if (typeof item.underline === "boolean") format.underline = item.underline;
+    if (item.align === "left" || item.align === "center" || item.align === "right") format.align = item.align;
+    if (item.numberFormat === "general" || item.numberFormat === "number" || item.numberFormat === "currency" || item.numberFormat === "percent" || item.numberFormat === "date") format.numberFormat = item.numberFormat;
+    const fillColor = safeHexColor(item.fillColor);
+    const textColor = safeHexColor(item.textColor);
+    if (fillColor) format.fillColor = fillColor;
+    if (textColor) format.textColor = textColor;
+    if (typeof item.wrap === "boolean") format.wrap = item.wrap;
+    if (Object.keys(format).length) result[key] = format;
+  }
+  return result;
+}
+
+/** Format a calculated cell value for display without changing the underlying workbook value. */
+export function formatCellDisplay(value: string | number, format?: CellFormat): string {
+  if (!format || !format.numberFormat || format.numberFormat === "general") return String(value ?? "");
+  if (typeof value !== "number" || !Number.isFinite(value)) return String(value ?? "");
+  switch (format.numberFormat) {
+    case "number": return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
+    case "currency": return new Intl.NumberFormat(undefined, { style: "currency", currency: "PKR", maximumFractionDigits: 2 }).format(value);
+    case "percent": return new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 2 }).format(value);
+    case "date": {
+      if (value < 1 || value > 2958465) return String(value);
+      const date = new Date(Date.UTC(1899, 11, 30) + value * 86400000);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toISOString().slice(0, 10);
+    }
+    default: return String(value);
+  }
+}
