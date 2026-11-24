@@ -184,3 +184,16 @@ export function validateCellValue(value: string, rule?: ListValidationRule): { v
   const valid = options.some(option => option.localeCompare(candidate, undefined, { sensitivity: "accent" }) === 0);
   return valid ? { valid: true } : { valid: false, reason: "Choose a value from the column dropdown list." };
 }
+
+
+/** Accepts only well-formed per-column dropdown rules from backup or local storage. */
+export function sanitizeColumnValidations(value: unknown): Record<string, string[]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result: Record<string, string[]> = {};
+  for (const [column, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (!/^(0|[1-9]\d{0,3})$/.test(column) || !Array.isArray(raw)) continue;
+    const options = raw.filter((item): item is string => typeof item === "string").map(item => item.trim()).filter(Boolean).slice(0, 100);
+    if (options.length) result[column] = [...new Set(options)];
+  }
+  return result;
+}
