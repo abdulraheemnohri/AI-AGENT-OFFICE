@@ -46,7 +46,7 @@
 
 ## Not implemented / next milestones
 - Full-fidelity DOCX/ODT/RTF editor, OpenDocument formatting and full layout/media round-trip.
-- Advanced spreadsheet formulas, charts, pivot tables, workbook styling and formula compatibility beyond the built-in arithmetic, reference, aggregate and numeric-function subset.
+- Advanced spreadsheet formulas, editable charts, pivot tables, conditional formatting and full XLSX style compatibility. Basic per-cell text styling, alignment, wrapping, color and calculated-value number display are implemented; source-value editing remains raw and formatting is not yet round-tripped through XLSX/ODS.
 - Visual PowerPoint canvas, full PPTX import fidelity and animation/media editing.
 - PDF OCR, native comment annotations, certificate-based signatures, secure redaction and page thumbnails.
 - Built-in offline speech, vision, document RAG, embeddings and model manager with download/checksum/unload.
@@ -57,3 +57,5 @@ All document conversion and editing described above is performed locally in the 
 - Per-column dropdown data validation with persisted allowed-value lists, in-cell suggestions, invalid-value rejection and formula/blank exemptions.
 \n- Dropdown validation rules are included in plain and encrypted workspace backups and autosave recovery; imported rule data is normalized to safe column indexes and at most 100 unique non-empty options per column.\n
 - Per-column numeric and ISO-date validation supports optional inclusive minimum/maximum bounds, configurable blank handling, formula exemption, persistence and workspace backup/restore.
+
+- Per-cell formatting: bold, italic, underline, alignment, wrapping, fill/text colors, and general/number/PKR/percent/date display for calculated values. Formatting metadata is persisted locally and included in plain/encrypted workspace backups and autosave recovery; it does not alter source values or formulas.
