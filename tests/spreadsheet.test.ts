@@ -91,3 +91,30 @@ describe("spreadsheet dropdown validation", () => {
     expect(validateCellValue("Green", rule).valid).toBe(true);
   });
 });
+
+describe("spreadsheet numeric and date validation", () => {
+  it("validates numeric values, inclusive bounds, blanks and formulas", async () => {
+    const { validateNumericDateCellValue } = await import("../src/lib/spreadsheet");
+    const rule = { type: "number" as const, min: 1, max: 10, allowBlank: false };
+    expect(validateNumericDateCellValue("5", rule).valid).toBe(true);
+    expect(validateNumericDateCellValue("0", rule).valid).toBe(false);
+    expect(validateNumericDateCellValue("11", rule).valid).toBe(false);
+    expect(validateNumericDateCellValue("five", rule).valid).toBe(false);
+    expect(validateNumericDateCellValue("", rule).valid).toBe(false);
+    expect(validateNumericDateCellValue("=A1", rule).valid).toBe(true);
+  });
+  it("validates real ISO dates and date bounds", async () => {
+    const { validateNumericDateCellValue } = await import("../src/lib/spreadsheet");
+    const rule = { type: "date" as const, min: "2026-01-01", max: "2026-12-31" };
+    expect(validateNumericDateCellValue("2026-06-15", rule).valid).toBe(true);
+    expect(validateNumericDateCellValue("2025-12-31", rule).valid).toBe(false);
+    expect(validateNumericDateCellValue("2027-01-01", rule).valid).toBe(false);
+    expect(validateNumericDateCellValue("2026-02-30", rule).valid).toBe(false);
+    expect(validateNumericDateCellValue("", rule).valid).toBe(true);
+  });
+  it("sanitizes persisted numeric/date rules and drops inverted bounds", async () => {
+    const { sanitizeColumnConstraints } = await import("../src/lib/spreadsheet");
+    expect(sanitizeColumnConstraints({ "0": { type: "number", min: 1, max: 5, allowBlank: false }, "1": { type: "date", min: "2026-01-01" }, "2": { type: "number", min: 9, max: 2 }, "bad": { type: "number" } }))
+      .toEqual({ "0": { type: "number", min: 1, max: 5, allowBlank: false }, "1": { type: "date", min: "2026-01-01", allowBlank: true } });
+  });
+});
