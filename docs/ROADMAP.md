@@ -41,7 +41,7 @@ Legend: [x] implemented in the repository; [ ] remaining or not yet verified. Ba
 
 ### P1 — Sheets and Slides
 - [ ] Cell formatting: number/date/currency, font, fill, borders, alignment and wrapping.
-- [x] Per-column dropdown data validation: persisted allowed values, in-cell suggestions, invalid-value rejection, and formula/blank exemptions.
+- [x] Per-column dropdown data validation: persisted allowed values, in-cell suggestions, invalid-value rejection, formula/blank exemptions, and inclusion in plain/encrypted backups and autosave recovery.
 - [ ] Numeric/date validation bounds and configurable blank handling.
 - [ ] Editable charts and export; more Excel-compatible formulas, named ranges and conditional formatting.
 - [ ] Freeze panes, pivot tables and advanced XLSX formatting compatibility.
