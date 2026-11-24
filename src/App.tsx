@@ -5,11 +5,11 @@ import { parseCsv, stringifyCsv } from "./lib/csv";
 import { createBackup, parseBackup, encryptBackupText, decryptBackupText } from "./lib/backup";
 import { sanitizePreferences } from "./lib/preferences";
 import { sanitizeWorkbookCharts, type WorkbookChart } from "./lib/charts";
-const WorkbookCharts = lazy(() => import("./components/WorkbookCharts").then(module => ({ default: module.WorkbookCharts })));
 import { sanitizeConditionalRules, getConditionalCellStyle, type ConditionalFormatRule } from "./lib/conditional-format";
 import { ConditionalFormattingPanel } from "./components/ConditionalFormattingPanel";
 import { deletePdfPage, duplicatePdfPage, exportDocx, exportPptx, exportRtf, exportOdt, importOdt, importRtf, exportXlsxWorkbook, importXlsxWorkbook, importOdsWorkbook, exportOdsWorkbook, importOdp, exportOdp, extractPdfPages, highlightPdfArea, listPdfFormFields, fillPdfForm, importDocx, importPptx, insertBlankPdfPage, mergePdfs, pdfPageCount, reorderPdfPages, rotatePdfPage, stampPdfPage, addPdfNote } from "./lib/formats";
 import { BrainCircuit, Home, FileText, Sheet, Presentation, FileDown, Bot, Cpu, Settings, FolderOpen, FilePlus2, ShieldCheck, Save, Eye, Edit3, Search, Download, Plus, Trash2, Play, CheckCircle2, ChevronRight, HardDrive, Sparkles, Printer, Archive, Upload, Database, MessageSquare, RefreshCw } from "lucide-react";
+const WorkbookCharts = lazy(() => import("./components/WorkbookCharts").then(module => ({ default: module.WorkbookCharts })));
 
 type Page = "Home" | "Writer" | "Sheets" | "Slides" | "PDF Studio" | "AI Agent" | "Models & Runtimes" | "Devices & Printing" | "Data & Backup" | "Settings";
 type Opened = { name: string; path: string; content: string };
