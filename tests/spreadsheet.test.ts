@@ -143,3 +143,30 @@ describe("spreadsheet cell formatting", () => {
     expect(formatCellDisplay(42, { numberFormat: "general" })).toBe("42");
   });
 });
+
+
+describe("workbook chart data", () => {
+  it("sanitizes chart definitions and limits unsafe or malformed entries", async () => {
+    const { sanitizeWorkbookCharts } = await import("../src/lib/charts");
+    expect(sanitizeWorkbookCharts({
+      "0": [{ id: "chart_1", title: " Revenue ", kind: "bar", categoryColumn: 0, valueColumns: [1, 1, 2, -1], hasHeader: true }],
+      "-1": [{ id: "bad", kind: "pie", categoryColumn: 0, valueColumns: [1] }],
+      "1": [{ id: "bad", kind: "radar", categoryColumn: 0, valueColumns: [1] }]
+    })).toEqual({
+      "0": [{ id: "chart_1", title: "Revenue", kind: "bar", categoryColumn: 0, valueColumns: [1, 2], hasHeader: true }]
+    });
+    expect(sanitizeWorkbookCharts(null)).toEqual({});
+  });
+
+  it("builds chart series from formula results without mutating workbook cells", async () => {
+    const { buildWorkbookChartData } = await import("../src/lib/charts");
+    const workbook = [["Month", "Revenue", "Cost"], ["Jan", "=10+5", "4"], ["Feb", "20", "8"], ["Mar", "text", ""]];
+    const calculated = [["Month", "Revenue", "Cost"], ["Jan", 15, 4], ["Feb", 20, 8], ["Mar", "text", ""]];
+    const chart = { id: "line1", title: "Revenue", kind: "line" as const, categoryColumn: 0, valueColumns: [1, 2], hasHeader: true };
+    expect(buildWorkbookChartData(workbook, calculated, chart)).toEqual([
+      { name: "Jan", series1: 15, series2: 4 },
+      { name: "Feb", series1: 20, series2: 8 }
+    ]);
+    expect(workbook[1][1]).toBe("=10+5");
+  });
+});
