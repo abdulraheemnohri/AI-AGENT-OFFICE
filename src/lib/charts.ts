@@ -16,7 +16,7 @@ export function sanitizeWorkbookCharts(value: unknown): Record<string, WorkbookC
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const result: Record<string, WorkbookChart[]> = {};
   for (const [sheetKey, rawCharts] of Object.entries(value as Record<string, unknown>)) {
-    if (!/^(0|[1-9]\\d{0,2})$/.test(sheetKey) || !Array.isArray(rawCharts)) continue;
+    if (!/^(0|[1-9]\d{0,2})$/.test(sheetKey) || !Array.isArray(rawCharts)) continue;
     const charts: WorkbookChart[] = [];
     for (const raw of rawCharts.slice(0, 30)) {
       if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
